@@ -19,6 +19,13 @@ def tokenize(source: str) -> List[Token]:
             tokens.append(('DEDENT', None))
             indent_stack.pop()
         stripped = line.strip()
+        if stripped.startswith('import '):
+            m = re.match(r'import\s+"([^"]+)"', stripped)
+            if not m:
+                raise SyntaxError(f"Invalid import syntax: {stripped}")
+            tokens.append(('IMPORT', m.group(1)))
+            tokens.append(('NEWLINE', None))
+            continue
         if stripped.startswith('let '):
             tokens.append(('LET', 'let'))
             rest = stripped[4:].strip()

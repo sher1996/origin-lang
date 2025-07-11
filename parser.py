@@ -36,6 +36,10 @@ class ExprNode(Node):
     def __init__(self, expr):
         self.expr = expr
 
+class ImportNode(Node):
+    def __init__(self, path):
+        self.path = path
+
 # Minimal parser for the current language
 class Parser:
     def __init__(self, tokens: List[Any]):
@@ -44,6 +48,12 @@ class Parser:
         self.length = len(tokens)
 
     def peek(self, offset=0):
+        if self.pos + offset < self.length:
+            return self.tokens[self.pos + offset]
+        return None
+
+    def peek_safe(self, offset=0):
+        """Safe peek that returns None if out of bounds"""
         if self.pos + offset < self.length:
             return self.tokens[self.pos + offset]
         return None
@@ -57,6 +67,16 @@ class Parser:
         stmts = []
         while self.pos < self.length:
             tok = self.peek()
+            if tok and tok[0] == 'IMPORT':
+                import_tok = self.advance()  # IMPORT
+                if import_tok is None:
+                    raise SyntaxError('Expected import token but got None')
+                path = import_tok[1]
+                stmts.append(ImportNode(path))
+                peeked = self.peek_safe()
+                if peeked is not None and peeked[0] == 'NEWLINE':
+                    self.advance()
+                continue
             if tok and tok[0] == 'LET':
                 self.advance()  # LET
                 name_tok = self.advance()
@@ -65,14 +85,16 @@ class Parser:
                 expr_tok = self.advance()
                 expr = expr_tok[1] if expr_tok else None
                 stmts.append(LetNode(name, expr))
-                if self.peek() and self.peek()[0] == 'NEWLINE':
+                peeked = self.peek_safe()
+                if peeked is not None and peeked[0] == 'NEWLINE':
                     self.advance()
             elif tok and tok[0] == 'SAY':
                 self.advance()  # SAY
                 expr_tok = self.advance()
                 expr = expr_tok[1] if expr_tok else None
                 stmts.append(SayNode(expr))
-                if self.peek() and self.peek()[0] == 'NEWLINE':
+                peeked = self.peek_safe()
+                if peeked is not None and peeked[0] == 'NEWLINE':
                     self.advance()
             elif tok and tok[0] == 'REPEAT':
                 self.advance()  # REPEAT
@@ -80,7 +102,8 @@ class Parser:
                 count = count_tok[1] if count_tok else None
                 self.advance()  # TIMES
                 self.advance()  # COLON
-                if self.peek() and self.peek()[0] == 'NEWLINE':
+                peeked = self.peek_safe()
+                if peeked is not None and peeked[0] == 'NEWLINE':
                     self.advance()
                 body = []
                 next_tok = self.peek()
@@ -98,21 +121,25 @@ class Parser:
                             expr_tok = self.advance()
                             expr = expr_tok[1] if expr_tok else None
                             body.append(LetNode(name, expr))
-                            if self.peek() and self.peek()[0] == 'NEWLINE':
+                            peeked = self.peek_safe()
+                            if peeked is not None and peeked[0] == 'NEWLINE':
                                 self.advance()
                         elif inner_tok[0] == 'SAY':
                             self.advance()
                             expr_tok = self.advance()
                             expr = expr_tok[1] if expr_tok else None
                             body.append(SayNode(expr))
-                            if self.peek() and self.peek()[0] == 'NEWLINE':
+                            peeked = self.peek_safe()
+                            if peeked is not None and peeked[0] == 'NEWLINE':
                                 self.advance()
                         else:
                             raise SyntaxError(f"Unknown command in repeat body: {inner_tok}")
-                    if self.peek() and self.peek()[0] == 'DEDENT':
+                    peeked = self.peek_safe()
+                    if peeked is not None and peeked[0] == 'DEDENT':
                         self.advance()
                 stmts.append(RepeatNode(count, body))
-                if self.peek() and self.peek()[0] == 'NEWLINE':
+                peeked = self.peek_safe()
+                if peeked is not None and peeked[0] == 'NEWLINE':
                     self.advance()
             elif tok and tok[0] == 'DEFINE':
                 self.advance()  # DEFINE
@@ -120,15 +147,20 @@ class Parser:
                 name = name_tok[1] if name_tok else None
                 self.advance()  # LPAREN
                 params = []
-                while self.peek() and self.peek()[0] == 'IDENT':
+                while True:
+                    peeked = self.peek_safe()
+                    if peeked is None or peeked[0] != 'IDENT':
+                        break
                     param_tok = self.advance()
                     if param_tok:
                         params.append(param_tok[1])
-                    if self.peek() and self.peek()[0] == 'COMMA':
+                    peeked = self.peek_safe()
+                    if peeked is not None and peeked[0] == 'COMMA':
                         self.advance()  # COMMA
                 self.advance()  # RPAREN
                 self.advance()  # COLON
-                if self.peek() and self.peek()[0] == 'NEWLINE':
+                peeked = self.peek_safe()
+                if peeked is not None and peeked[0] == 'NEWLINE':
                     self.advance()
                 body = []
                 next_tok = self.peek()
@@ -146,43 +178,53 @@ class Parser:
                             expr_tok = self.advance()
                             expr = expr_tok[1] if expr_tok else None
                             body.append(LetNode(func_name, expr))
-                            if self.peek() and self.peek()[0] == 'NEWLINE':
+                            peeked = self.peek_safe()
+                            if peeked is not None and peeked[0] == 'NEWLINE':
                                 self.advance()
                         elif inner_tok[0] == 'SAY':
                             self.advance()
                             expr_tok = self.advance()
                             expr = expr_tok[1] if expr_tok else None
                             body.append(SayNode(expr))
-                            if self.peek() and self.peek()[0] == 'NEWLINE':
+                            peeked = self.peek_safe()
+                            if peeked is not None and peeked[0] == 'NEWLINE':
                                 self.advance()
                         elif inner_tok[0] == 'EXPR':
                             self.advance()
                             expr = inner_tok[1]
                             body.append(ExprStmtNode(expr))
-                            if self.peek() and self.peek()[0] == 'NEWLINE':
+                            peeked = self.peek_safe()
+                            if peeked is not None and peeked[0] == 'NEWLINE':
                                 self.advance()
                         else:
                             raise SyntaxError(f"Unknown command in function body: {inner_tok}")
-                    if self.peek() and self.peek()[0] == 'DEDENT':
+                    peeked = self.peek_safe()
+                    if peeked is not None and peeked[0] == 'DEDENT':
                         self.advance()
                 stmts.append(FuncDefNode(name, params, body))
-                if self.peek() and self.peek()[0] == 'NEWLINE':
+                peeked = self.peek_safe()
+                if peeked is not None and peeked[0] == 'NEWLINE':
                     self.advance()
-            elif tok and tok[0] == 'IDENT' and self.peek(1) and self.peek(1)[0] == 'LPAREN':
+            elif tok is not None and tok[0] == 'IDENT' and self.peek_safe(1) is not None and self.peek_safe(1)[0] == 'LPAREN':
                 # Function call
                 name_tok = self.advance()
                 func_name = name_tok[1] if name_tok else None
                 self.advance()  # LPAREN
                 args = []
-                while self.peek() and self.peek()[0] == 'EXPR':
+                while True:
+                    peeked = self.peek_safe()
+                    if peeked is None or peeked[0] != 'EXPR':
+                        break
                     arg_tok = self.advance()
                     if arg_tok:
                         args.append(arg_tok[1])
-                    if self.peek() and self.peek()[0] == 'COMMA':
+                    peeked = self.peek_safe()
+                    if peeked is not None and peeked[0] == 'COMMA':
                         self.advance()  # COMMA
                 self.advance()  # RPAREN
                 stmts.append(FuncCallNode(func_name, args))
-                if self.peek() and self.peek()[0] == 'NEWLINE':
+                peeked = self.peek_safe()
+                if peeked is not None and peeked[0] == 'NEWLINE':
                     self.advance()
             elif tok and tok[0] in ('NEWLINE', 'DEDENT'):
                 self.advance()

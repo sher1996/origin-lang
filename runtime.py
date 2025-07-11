@@ -1,10 +1,17 @@
 import re
+import os
 from typing import Any, List
-from parser import SayNode, LetNode, RepeatNode, FuncDefNode, FuncCallNode, ExprStmtNode
+from parser import SayNode, LetNode, RepeatNode, FuncDefNode, FuncCallNode, ExprStmtNode, ImportNode
+import lexer
+import parser
 
-def execute(ast: List[Any]):
-    variables = {}
-    functions = {}
+global_loaded_modules = set()
+
+def execute(ast: List[Any], base_path=None, variables=None, functions=None):
+    if variables is None:
+        variables = {}
+    if functions is None:
+        functions = {}
 
     def make_func(name):
         def _func(*args):
@@ -80,6 +87,20 @@ def execute(ast: List[Any]):
                 else:
                     raise RuntimeError(f"Unknown statement type in function: {type(stmt)}")
             return result
+        elif isinstance(node, ImportNode):
+            # Only load if not already loaded
+            import_path = node.path
+            if base_path is not None:
+                import_path = os.path.join(base_path, import_path)
+            if import_path not in global_loaded_modules:
+                global_loaded_modules.add(import_path)
+                with open(import_path, 'r', encoding='utf-8') as f:
+                    source = f.read()
+                tokens = lexer.tokenize(source)
+                ast = parser.parse(tokens)
+                # Use the directory of the imported file as base_path for its imports
+                import_base = os.path.dirname(import_path)
+                execute(ast, base_path=import_base, variables=variables, functions=functions)
         else:
             raise RuntimeError(f"Unknown AST node: {node}")
 
