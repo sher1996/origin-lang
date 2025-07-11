@@ -1,11 +1,23 @@
 import re
 import os
 from typing import Any, List
-from parser import SayNode, LetNode, RepeatNode, FuncDefNode, FuncCallNode, ExprStmtNode, ImportNode
+from parser import SayNode, LetNode, RepeatNode, FuncDefNode, FuncCallNode, ExprStmtNode, ImportNode, StringNode
 import lexer
 import parser
 
 global_loaded_modules = set()
+
+def plus(a, b):
+    if isinstance(a, str) or isinstance(b, str):
+        return str(a) + str(b)
+    return a + b
+
+def replace_plus_outside_strings(expr):
+    # Replace a + b with _PLUS_(a, b) where a and b are quoted strings or identifiers/numbers
+    pattern = r'((?:"[^"]*")|(?:\w+))\s*\+\s*((?:"[^"]*")|(?:\w+))'
+    while re.search(pattern, expr):
+        expr = re.sub(pattern, r'_PLUS_(\1, \2)', expr)
+    return expr
 
 def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_allowed=False, files_allowed=True):
     if variables is None:
@@ -51,7 +63,11 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_
             allowed_names[fname] = make_func(fname)
         # Add http_get function
         allowed_names['http_get'] = http_get
+        # Add plus function for string concatenation
+        allowed_names['_PLUS_'] = plus
         expr = re.sub(r"\s+", " ", expr.strip())
+        # Pre-process + operators to use our plus function, but only outside strings
+        expr = replace_plus_outside_strings(expr)
         return eval(expr, allowed_names)
 
     def exec_node(node):
@@ -63,6 +79,9 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_
                 print(int(result))
             else:
                 print(result)
+        elif isinstance(node, StringNode):
+            # Handle standalone string literals
+            print(node.value)
         elif isinstance(node, RepeatNode):
             for _ in range(node.count):
                 for stmt in node.body:

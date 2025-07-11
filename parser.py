@@ -40,6 +40,10 @@ class ImportNode(Node):
     def __init__(self, path):
         self.path = path
 
+class StringNode(Node):
+    def __init__(self, value):
+        self.value = value
+
 # Minimal parser for the current language
 class Parser:
     def __init__(self, tokens: List[Any]):
@@ -67,6 +71,14 @@ class Parser:
         stmts = []
         while self.pos < self.length:
             tok = self.peek()
+            if tok and tok[0] == 'STRING':
+                string_tok = self.advance()
+                string_value = string_tok[1] if string_tok else None
+                stmts.append(StringNode(string_value))
+                peeked = self.peek_safe()
+                if peeked is not None and peeked[0] == 'NEWLINE':
+                    self.advance()
+                continue
             if tok and tok[0] == 'IMPORT':
                 import_tok = self.advance()  # IMPORT
                 if import_tok is None:
@@ -205,10 +217,12 @@ class Parser:
                 peeked = self.peek_safe()
                 if peeked is not None and peeked[0] == 'NEWLINE':
                     self.advance()
-            elif tok is not None and tok[0] == 'IDENT' and self.peek_safe(1) is not None and self.peek_safe(1)[0] == 'LPAREN':
-                # Function call
-                name_tok = self.advance()
-                func_name = name_tok[1] if name_tok else None
+            elif tok is not None and tok[0] == 'IDENT':
+                next_tok = self.peek_safe(1)
+                if next_tok is not None and next_tok[0] == 'LPAREN':
+                    # Function call
+                    name_tok = self.advance()
+                    func_name = name_tok[1] if name_tok else None
                 self.advance()  # LPAREN
                 args = []
                 while True:

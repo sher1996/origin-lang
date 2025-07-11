@@ -1,7 +1,6 @@
 define square(n):
-    let result = n * n
-    say result   # just print the result
-    result       # implicit return
+    say "Debug: " + n
+    n * n
 
 let x = 7
 say square(x)      # → 49
