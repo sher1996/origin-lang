@@ -127,6 +127,9 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_
                     raise RuntimeError(f"Unknown statement type in function: {type(stmt)}")
             return result
         elif isinstance(node, ImportNode):
+            # Check if file access is allowed
+            if not files_allowed:
+                raise RuntimeError("File access denied")
             # Only load if not already loaded
             import_path = node.path
             if base_path is not None:

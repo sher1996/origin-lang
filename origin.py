@@ -29,6 +29,8 @@ if __name__ == "__main__":
             net_allowed = True
         elif arg == "--allow-files":
             files_allowed = True
+        elif arg == "--deny-files":
+            files_allowed = False
         elif not arg.startswith("--"):
             filename = arg
     
