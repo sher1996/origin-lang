@@ -1,0 +1,9 @@
+define square(n):
+    let result = n * n
+    say result   # just print the result
+    result       # implicit return
+
+let x = 7
+say square(x)      # → 49
+say square(4)      # → 16
+say x              # → 7  (x unchanged) 

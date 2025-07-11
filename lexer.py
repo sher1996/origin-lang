@@ -38,8 +38,44 @@ def tokenize(source: str) -> List[Token]:
             tokens.append(('NUMBER', int(m.group(1))))
             tokens.append(('TIMES', 'times'))
             tokens.append(('COLON', ':'))
+        elif stripped.startswith('define '):
+            tokens.append(('DEFINE', 'define'))
+            rest = stripped[7:].strip()
+            if ':' not in rest:
+                raise SyntaxError(f"Invalid function definition: {stripped}")
+            func_part, _ = rest.split(':', 1)
+            func_part = func_part.strip()
+            if '(' in func_part and func_part.endswith(')'):
+                name = func_part[:func_part.find('(')].strip()
+                params_part = func_part[func_part.find('(')+1:func_part.rfind(')')].strip()
+                tokens.append(('IDENT', name))
+                tokens.append(('LPAREN', '('))
+                if params_part:
+                    params = [p.strip() for p in params_part.split(',')]
+                    for i, param in enumerate(params):
+                        tokens.append(('IDENT', param))
+                        if i < len(params) - 1:
+                            tokens.append(('COMMA', ','))
+                tokens.append(('RPAREN', ')'))
+                tokens.append(('COLON', ':'))
+            else:
+                raise SyntaxError(f"Invalid function definition: {stripped}")
+        elif '(' in stripped and ')' in stripped:
+            # Function call
+            name = stripped[:stripped.find('(')].strip()
+            args_part = stripped[stripped.find('(')+1:stripped.rfind(')')].strip()
+            tokens.append(('IDENT', name))
+            tokens.append(('LPAREN', '('))
+            if args_part:
+                args = [arg.strip() for arg in args_part.split(',')]
+                for i, arg in enumerate(args):
+                    tokens.append(('EXPR', arg))
+                    if i < len(args) - 1:
+                        tokens.append(('COMMA', ','))
+            tokens.append(('RPAREN', ')'))
         else:
-            raise SyntaxError(f"Unknown command: {stripped}")
+            # Standalone expression (for function return values)
+            tokens.append(('EXPR', stripped))
         tokens.append(('NEWLINE', None))
     while len(indent_stack) > 1:
         tokens.append(('DEDENT', None))
