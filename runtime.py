@@ -7,11 +7,17 @@ import parser
 
 global_loaded_modules = set()
 
-def execute(ast: List[Any], base_path=None, variables=None, functions=None):
+def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_allowed=False, files_allowed=True):
     if variables is None:
         variables = {}
     if functions is None:
         functions = {}
+
+    def http_get(url):
+        if net_allowed:
+            return f"(NetStub: {url})"
+        else:
+            raise RuntimeError("Network access denied")
 
     def make_func(name):
         def _func(*args):
@@ -43,6 +49,8 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None):
         # Add user functions as callables
         for fname in functions:
             allowed_names[fname] = make_func(fname)
+        # Add http_get function
+        allowed_names['http_get'] = http_get
         expr = re.sub(r"\s+", " ", expr.strip())
         return eval(expr, allowed_names)
 
