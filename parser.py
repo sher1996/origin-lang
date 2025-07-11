@@ -242,6 +242,13 @@ class Parser:
                     self.advance()
             elif tok and tok[0] in ('NEWLINE', 'DEDENT'):
                 self.advance()
+            elif tok and tok[0] == 'EXPR':
+                # Unknown keyword at top level
+                expr_val = tok[1]
+                # Try to extract the first word as the keyword
+                keyword = expr_val.split()[0] if expr_val else 'unknown'
+                from runtime import OriginError
+                raise OriginError(f'unknown keyword "{keyword}"')
             else:
                 self.advance()
         return stmts

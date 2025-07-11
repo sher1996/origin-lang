@@ -38,9 +38,13 @@ if __name__ == "__main__":
         print("Usage: python origin.py <file.origin> [--allow-net] [--allow-files]")
         sys.exit(1)
     
-    with open(filename, 'r', encoding='utf-8') as f:
-        source = f.read()
-    tokens = lexer.tokenize(source)
-    ast = parser.parse(tokens)
-    base_path = os.path.dirname(os.path.abspath(filename))
-    runtime.execute(ast, base_path=base_path, net_allowed=net_allowed, files_allowed=files_allowed) 
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            source = f.read()
+        tokens = lexer.tokenize(source)
+        ast = parser.parse(tokens)
+        base_path = os.path.dirname(os.path.abspath(filename))
+        runtime.execute(ast, base_path=base_path, net_allowed=net_allowed, files_allowed=files_allowed)
+    except runtime.OriginError as e:
+        print(f"Error: {e}")
+        sys.exit(1) 

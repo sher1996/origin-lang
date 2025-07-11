@@ -5,6 +5,9 @@ from parser import SayNode, LetNode, RepeatNode, FuncDefNode, FuncCallNode, Expr
 import lexer
 import parser
 
+class OriginError(RuntimeError):
+    pass
+
 global_loaded_modules = set()
 
 def plus(a, b):
@@ -29,13 +32,13 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_
         if net_allowed:
             return f"(NetStub: {url})"
         else:
-            raise RuntimeError("Network access denied")
+            raise OriginError("network access denied")
 
     def make_func(name):
         def _func(*args):
             func = functions[name]
             if len(args) != len(func['params']):
-                raise RuntimeError(f"Function '{name}' expects {len(func['params'])} arguments, got {len(args)}")
+                raise OriginError(f"function '{name}' expects {len(func['params'])} arguments, got {len(args)}")
             local_vars = variables.copy()
             for param, arg in zip(func['params'], args):
                 local_vars[param] = arg
@@ -52,7 +55,7 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_
                 elif isinstance(stmt, ExprStmtNode):
                     result = eval_expr(stmt.expr, local_vars)
                 else:
-                    raise RuntimeError(f"Unknown statement type in function: {type(stmt)}")
+                    raise OriginError(f"unknown statement type in function: {type(stmt)}")
             return result
         return _func
 
@@ -107,7 +110,7 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_
             # Direct function call at top level (not via eval)
             func = functions[node.name]
             if len(node.args) != len(func['params']):
-                raise RuntimeError(f"Function '{node.name}' expects {len(func['params'])} arguments, got {len(node.args)}")
+                raise OriginError(f"function '{node.name}' expects {len(func['params'])} arguments, got {len(node.args)}")
             local_vars = variables.copy()
             for param, arg in zip(func['params'], node.args):
                 local_vars[param] = eval_expr(arg, variables)
@@ -124,12 +127,12 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_
                 elif isinstance(stmt, ExprStmtNode):
                     result = eval_expr(stmt.expr, local_vars)
                 else:
-                    raise RuntimeError(f"Unknown statement type in function: {type(stmt)}")
+                    raise OriginError(f"unknown statement type in function: {type(stmt)}")
             return result
         elif isinstance(node, ImportNode):
             # Check if file access is allowed
             if not files_allowed:
-                raise RuntimeError("File access denied")
+                raise OriginError("file access denied")
             # Only load if not already loaded
             import_path = node.path
             if base_path is not None:
@@ -144,7 +147,7 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_
                 import_base = os.path.dirname(import_path)
                 execute(ast, base_path=import_base, variables=variables, functions=functions)
         else:
-            raise RuntimeError(f"Unknown AST node: {node}")
+            raise OriginError(f"unknown keyword \"{type(node).__name__}\"")
 
     for node in ast:
         exec_node(node) 
