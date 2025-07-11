@@ -1,0 +1,2 @@
+say ai.ask("What is life?")
+say ai.classify("I love Origin!", "positive", "negative", "neutral") 

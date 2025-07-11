@@ -56,6 +56,16 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_
             return result
         return _func
 
+    def ai_ask(prompt):
+        return f"(AI-Answer: {str(prompt)[:15]})"
+
+    def ai_classify(text, *labels):
+        return min(labels, key=len) if labels else ""
+
+    class _AI:
+        ask = staticmethod(ai_ask)
+        classify = staticmethod(ai_classify)
+
     def eval_expr(expr: str, variables: dict) -> Any:
         allowed_names = {**variables, "__builtins__": {}}
         # Add user functions as callables
@@ -65,6 +75,8 @@ def execute(ast: List[Any], base_path=None, variables=None, functions=None, net_
         allowed_names['http_get'] = http_get
         # Add plus function for string concatenation
         allowed_names['_PLUS_'] = plus
+        # Add AI object
+        allowed_names['ai'] = _AI
         expr = re.sub(r"\s+", " ", expr.strip())
         # Pre-process + operators to use our plus function, but only outside strings
         expr = replace_plus_outside_strings(expr)
