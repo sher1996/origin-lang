@@ -50,20 +50,23 @@ class Parser:
                 expr_tok = self.advance()
                 expr = expr_tok[1] if expr_tok else None
                 stmts.append(LetNode(name, expr))
-                self.advance()  # NEWLINE
+                if self.peek() and self.peek()[0] == 'NEWLINE':
+                    self.advance()
             elif tok and tok[0] == 'SAY':
                 self.advance()  # SAY
                 expr_tok = self.advance()
                 expr = expr_tok[1] if expr_tok else None
                 stmts.append(SayNode(expr))
-                self.advance()  # NEWLINE
+                if self.peek() and self.peek()[0] == 'NEWLINE':
+                    self.advance()
             elif tok and tok[0] == 'REPEAT':
                 self.advance()  # REPEAT
                 count_tok = self.advance()
                 count = count_tok[1] if count_tok else None
                 self.advance()  # TIMES
                 self.advance()  # COLON
-                self.advance()  # NEWLINE
+                if self.peek() and self.peek()[0] == 'NEWLINE':
+                    self.advance()
                 body = []
                 next_tok = self.peek()
                 if next_tok and next_tok[0] == 'INDENT':
@@ -80,18 +83,24 @@ class Parser:
                             expr_tok = self.advance()
                             expr = expr_tok[1] if expr_tok else None
                             body.append(LetNode(name, expr))
-                            self.advance()
+                            if self.peek() and self.peek()[0] == 'NEWLINE':
+                                self.advance()
                         elif inner_tok[0] == 'SAY':
                             self.advance()
                             expr_tok = self.advance()
                             expr = expr_tok[1] if expr_tok else None
                             body.append(SayNode(expr))
-                            self.advance()
+                            if self.peek() and self.peek()[0] == 'NEWLINE':
+                                self.advance()
                         else:
                             raise SyntaxError(f"Unknown command in repeat body: {inner_tok}")
                     if self.peek() and self.peek()[0] == 'DEDENT':
                         self.advance()
                 stmts.append(RepeatNode(count, body))
+                if self.peek() and self.peek()[0] == 'NEWLINE':
+                    self.advance()
+            elif tok and tok[0] in ('NEWLINE', 'DEDENT'):
+                self.advance()
             else:
                 self.advance()
         return stmts
