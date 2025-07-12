@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+    
+    - name: Run Python tests
+      run: |
+        python -m pytest tests/
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: visual/package-lock.json
+    
+    - name: Install Node.js dependencies
+      run: |
+        cd visual
+        npm ci
+    
+    - name: Build visual editor
+      run: |
+        cd visual
+        npm run build
+    
+    - name: Check TypeScript types
+      run: |
+        cd visual
+        npx tsc --noEmit 

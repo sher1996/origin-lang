@@ -16,6 +16,8 @@ from src.origin.net import is_url
 from src.origin.evaluator import Evaluator
 from src.origin.recorder import Recorder
 from src.origin.utils import get_recording_path
+from src.origin.replayer import Replayer
+from src.origin.replay_shell import ReplayShell
 
 def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, record: bool = False) -> None:
     with open(filename) as f:
@@ -51,6 +53,12 @@ def main():
     run_parser.add_argument("--deny-files", action="store_true", help="Deny file operations")
     run_parser.add_argument("--record", action="store_true", help="Record execution to .orirec file")
     
+    # Replay command (new functionality)
+    replay_parser = subparsers.add_parser("replay", help="Replay recorded execution")
+    replay_parser.add_argument("file", help="Recording file (.orirec) to replay")
+    replay_parser.add_argument("--step", action="store_true", help="Start interactive step-by-step replay")
+    replay_parser.add_argument("--start", type=int, help="Start at specific event index (0-based)")
+    
     # Package management commands
     add_parser = subparsers.add_parser("add", help="Add a local library or remote package")
     add_parser.add_argument("source", type=str, help="Path to library folder or URL/package spec")
@@ -73,6 +81,37 @@ def main():
                 files_allowed = False
             
             run(args.file, net_allowed=args.allow_net, files_allowed=files_allowed, record=args.record)
+        
+        elif args.command == "replay":
+            # Load the recording file
+            recording_path = pathlib.Path(args.file)
+            if not recording_path.exists():
+                print(f"Error: Recording file not found: {recording_path}")
+                sys.exit(1)
+            
+            try:
+                replayer = Replayer.from_file(recording_path)
+                
+                # Start at specific index if requested
+                if args.start is not None:
+                    if not replayer.goto(args.start):
+                        print(f"Error: Invalid start index {args.start}")
+                        sys.exit(1)
+                
+                if args.step:
+                    # Start interactive shell
+                    shell = ReplayShell(replayer)
+                    shell.run()
+                else:
+                    # Just show info about the recording
+                    info = replayer.get_info()
+                    print(f"Recording: {recording_path}")
+                    print(f"Total events: {info['total_events']}")
+                    print("Use --step for interactive replay")
+            
+            except Exception as e:
+                print(f"Error loading recording: {e}")
+                sys.exit(1)
         
         elif args.command == "add":
             PackageManager().add(args.source, args.checksum, args.update)
