@@ -18,6 +18,7 @@ from src.origin.recorder import Recorder
 from src.origin.utils import get_recording_path
 from src.origin.replayer import Replayer
 from src.origin.replay_shell import ReplayShell
+from src.transform.blocks_to_ast import main as viz_main
 
 def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, record: bool = False) -> None:
     with open(filename) as f:
@@ -67,6 +68,18 @@ def main():
     
     remove_parser = subparsers.add_parser("remove", help="Remove an installed library")
     remove_parser.add_argument("name", type=str, help="Library name")
+    
+    # Visual editor commands
+    viz_parser = subparsers.add_parser("viz", help="Visual editor commands")
+    viz_subparsers = viz_parser.add_subparsers(dest="viz_command", help="Visual editor subcommands")
+    
+    viz_import_parser = viz_subparsers.add_parser("import", help="Import .origin file to JSON blocks")
+    viz_import_parser.add_argument("input", help="Input .origin file")
+    viz_import_parser.add_argument("--out", help="Output JSON file (default: input.json)")
+    
+    viz_export_parser = viz_subparsers.add_parser("export", help="Export JSON blocks to .origin file")
+    viz_export_parser.add_argument("input", help="Input JSON file")
+    viz_export_parser.add_argument("--out", help="Output .origin file (default: input.origin)")
     
     args = arg_parser.parse_args()
     
@@ -118,6 +131,27 @@ def main():
         
         elif args.command == "remove":
             PackageManager().remove(args.name)
+        
+        elif args.command == "viz":
+            if not args.viz_command:
+                viz_parser.print_help()
+                sys.exit(1)
+            
+            # Set up sys.argv for the viz_main function
+            original_argv = sys.argv
+            if args.viz_command == "import":
+                sys.argv = ["blocks_to_ast.py", "import", args.input]
+                if args.out:
+                    sys.argv.append(args.out)
+            elif args.viz_command == "export":
+                sys.argv = ["blocks_to_ast.py", "export", args.input]
+                if args.out:
+                    sys.argv.append(args.out)
+            
+            try:
+                viz_main()
+            finally:
+                sys.argv = original_argv
     
     except OriginPkgError as e:
         print(f"OriginPkgError: {e}")
