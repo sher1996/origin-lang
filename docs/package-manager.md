@@ -7,9 +7,11 @@ The Origin Package Manager provides a simple way to manage local and remote libr
 The package manager allows you to:
 - Add local libraries to your project
 - Add remote packages from HTTPS URLs
+- Add packages from registry using semantic versioning
 - Remove installed libraries
 - Manage dependencies through a `pkg.json` manifest
 - Verify package integrity with SHA-256 checksums
+- Lock dependency versions with `origin.lock`
 
 ## Quick Start
 
@@ -45,6 +47,14 @@ origin add https://example.com/math_utils-0.2.0.tar.gz --checksum <sha256>
 
 This will download, verify, and install the package to `.origin/libs/`.
 
+Add a package from registry using semantic versioning:
+
+```bash
+origin add std/math@^1.2.0
+```
+
+This will resolve the highest compatible version and install it to `.origin/libs/`.
+
 ### 3. Remove Libraries
 
 Remove an installed library:
@@ -55,12 +65,13 @@ origin remove math_utils
 
 ## Commands
 
-### `origin add <source> [--checksum <sha256>]`
+### `origin add <source> [--checksum <sha256>] [--update]`
 
-Adds a local library or remote package to your project.
+Adds a local library, remote package, or registry package to your project.
 
-- **source**: Path to the library folder or URL to remote package
+- **source**: Path to the library folder, URL to remote package, or package spec (e.g., "std/math@^1.2.0")
 - **--checksum**: Optional SHA-256 checksum for verification
+- **--update**: Update lockfile even if package exists
 
 **Examples:**
 ```bash
@@ -71,6 +82,12 @@ origin add ../shared/string_utils
 # Remote package
 origin add https://example.com/math_utils-0.2.0.tar.gz
 origin add https://example.com/math_utils-0.2.0.tar.gz --checksum 642FB2E16399776F1F352245A3A522DE2BB89969220718CDE0595726CC752F88
+
+# Registry package with semantic versioning
+origin add std/math@^1.2.0
+origin add std/string@~2.0
+origin add std/net@>=1.0 <2.0
+origin add std/math@^1.2.0 --update  # Force update
 ```
 
 ### `origin remove <name>`
@@ -136,13 +153,85 @@ my-project/
 - **Companion files**: Support for `.sha256` files alongside packages
 - **Clear diagnostics**: Helpful error messages for network issues
 
-### Registry System
+## Semantic Versioning
 
-A simple registry system allows aliasing packages:
+The package manager supports npm-style semantic version ranges:
+
+### Version Range Syntax
+
+- **Exact version**: `1.2.3`
+- **Caret ranges**: `^1.2.3` (allows minor and patch updates)
+- **Tilde ranges**: `~1.2.3` (allows patch updates only)
+- **Comparison operators**: `>=1.2.0`, `<2.0.0`, `=1.2.3`
+- **Compound ranges**: `>=1.2.0 <2.0.0`
+- **Wildcard**: `*` (matches any version)
+
+### Examples
+
+```bash
+# Install latest 1.x version
+origin add std/math@^1.0.0
+
+# Install latest 1.2.x version
+origin add std/math@~1.2.0
+
+# Install version 1.2.3 or higher, but less than 2.0.0
+origin add std/math@>=1.2.3 <2.0.0
+
+# Install exact version
+origin add std/math@1.2.3
+```
+
+## Lockfile System
+
+The package manager uses `origin.lock` to ensure reproducible builds:
+
+### Lockfile Format
+
+```json
+{
+  "packages": {
+    "math_utils": {
+      "version": "1.2.3",
+      "checksum": "abc123def456..."
+    },
+    "string_utils": {
+      "version": "2.0.0",
+      "checksum": "def456abc789..."
+    }
+  }
+}
+```
+
+### Lockfile Behavior
+
+- **First install**: Resolves version range, downloads package, writes to lockfile
+- **Subsequent installs**: Uses locked version unless `--update` flag is provided
+- **Deterministic**: Lockfile is sorted for consistent output
+- **Version pinning**: Ensures all developers use the same package versions
+
+### Update Workflow
+
+```bash
+# Install with version range (creates/updates lockfile)
+origin add std/math@^1.2.0
+
+# Reinstall from lockfile (no network request)
+origin add std/math@^1.2.0
+
+# Force update to latest compatible version
+origin add std/math@^1.2.0 --update
+```
+
+## Registry System
+
+A simple registry system allows aliasing packages with multiple versions:
 
 ```json
 {
   "std/math@1.0.0": "https://example.com/math-1.0.0.tar.gz",
+  "std/math@1.1.0": "https://example.com/math-1.1.0.tar.gz",
+  "std/math@1.2.0": "https://example.com/math-1.2.0.tar.gz",
   "std/string@2.0.0": "https://example.com/string-2.0.0.tar.gz"
 }
 ```
@@ -153,5 +242,5 @@ Registry file location: `~/.origin/registry.json`
 
 - Libraries are copied, not symlinked
 - No dependency resolution between libraries
-- No version management for individual libraries
-- Registry system is stub-only (no CLI integration yet) 
+- Registry system requires manual setup (no public registry yet)
+- Limited to HTTPS URLs for remote packages 

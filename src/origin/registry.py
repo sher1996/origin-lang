@@ -1,7 +1,8 @@
 import json
 import pathlib
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from .errors import OriginPkgError
+from .semver import find_highest_compatible_version
 
 
 class Registry:
@@ -62,14 +63,43 @@ class Registry:
         if key in registry:
             return registry[key]
         
-        # Look for package with version range (simple implementation)
-        for reg_key, url in registry.items():
-            if reg_key.startswith(f"{package_name}@") and reg_key != key:
-                # For now, just return the first match
-                # In a real implementation, you'd want semantic versioning
-                return url
-        
         return None
+    
+    def resolve_range(self, package_name: str, version_range: str) -> Optional[tuple[str, str]]:
+        """
+        Resolve a package name and version range to the highest compatible version and URL.
+        
+        Args:
+            package_name: Name of the package (e.g., "std/math")
+            version_range: Version range string (e.g., "^1.2.0", "~1.1", ">=1.2 <2.0")
+            
+        Returns:
+            Tuple of (version, url) if found, None otherwise
+        """
+        registry = self._load_registry()
+        
+        # Collect all available versions for this package
+        available_versions = []
+        version_urls = {}
+        
+        for reg_key, url in registry.items():
+            if reg_key.startswith(f"{package_name}@"):
+                # Extract version from key
+                version_part = reg_key[len(f"{package_name}@"):]
+                available_versions.append(version_part)
+                version_urls[version_part] = url
+        
+        if not available_versions:
+            return None
+        
+        # Find the highest compatible version
+        resolved_version = find_highest_compatible_version(available_versions, version_range)
+        
+        if resolved_version is None:
+            return None
+        
+        url = version_urls[resolved_version]
+        return resolved_version, url
     
     def add_alias(self, alias: str, url: str) -> None:
         """

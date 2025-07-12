@@ -8,6 +8,7 @@ from .errors import OriginPkgError
 from .net import download, download_checksum, is_url
 from .archive import extract_archive, is_archive_file
 from .registry import Registry, parse_package_spec
+from .lock import Lockfile
 
 LIB_DIR = pathlib.Path(".origin") / "libs"
 
@@ -19,20 +20,29 @@ class PackageManager:
             raise OriginPkgError("No pkg.json found in this directory.")
 
         self.manifest = json.loads(self.manifest_path.read_text())
+        self.lockfile = Lockfile(cwd / "origin.lock")
+        self.registry = Registry()
 
     # public API -----------------------------------------------------------
 
-    def add(self, src: str, checksum: str | None = None):
+    def add(self, src: str, checksum: str | None = None, update_lock: bool = False):
         """
         Add a library from local path or remote URL.
         
         Args:
-            src: Local path or remote URL
+            src: Local path or remote URL or package spec
             checksum: Optional SHA-256 checksum for verification
+            update_lock: Whether to update the lockfile even if package exists
         """
         LIB_DIR.mkdir(parents=True, exist_ok=True)
         
-        if is_url(src):
+        # Check if this is a package spec (e.g., "std/math@^1.2.0")
+        package_name, version_range = parse_package_spec(src)
+        
+        if '@' in src and not is_url(src) and version_range is not None:
+            # This is a package spec, try to resolve from registry
+            self._install_from_registry(package_name, version_range, update_lock)
+        elif is_url(src):
             self._install_remote(src, checksum)
         else:
             src_path = pathlib.Path(src)
@@ -40,6 +50,63 @@ class PackageManager:
                 self._install_local_archive(src_path, checksum)
             else:
                 self._install_local(src_path)
+    
+    def _install_from_registry(self, package_name: str, version_range: str, update_lock: bool = False):
+        """Install a package from the registry using semantic versioning."""
+        # Check if package is already in lockfile and we're not updating
+        if not update_lock and self.lockfile.has_package(package_name):
+            package_info = self.lockfile.get_package(package_name)
+            if package_info:
+                print(f"✓ Using locked version {package_info['version']} for {package_name}")
+                # Reinstall from lockfile
+                self._install_remote(package_info['checksum'], package_info['checksum'])
+                return
+        
+        # Resolve version from registry
+        result = self.registry.resolve_range(package_name, version_range)
+        if result is None:
+            raise OriginPkgError(f"No version of {package_name} satisfies range '{version_range}'")
+        
+        resolved_version, url = result
+        print(f"✓ Resolved {package_name}@{version_range} → {resolved_version}")
+        
+        # Download and verify checksum
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = pathlib.Path(temp_dir) / f"{package_name}.tar.gz"
+            download(url, temp_path)
+            
+            # Try to download checksum
+            checksum_url = f"{url}.sha256"
+            downloaded_checksum = download_checksum(checksum_url)
+            if downloaded_checksum:
+                self._verify_checksum(temp_path, downloaded_checksum)
+                checksum = downloaded_checksum
+            else:
+                # Calculate checksum ourselves
+                with open(temp_path, 'rb') as f:
+                    checksum = hashlib.sha256(f.read()).hexdigest()
+            
+            # Extract and install
+            extract_dir = temp_path.parent / temp_path.stem
+            extract_archive(temp_path, extract_dir)
+            
+            # Find the actual library directory
+            extracted_items = list(extract_dir.iterdir())
+            if len(extracted_items) == 1 and extracted_items[0].is_dir():
+                lib_dir = extracted_items[0]
+            else:
+                lib_dir = extract_dir
+            
+            # Copy to final location
+            final_dest = LIB_DIR / lib_dir.name
+            if final_dest.exists():
+                shutil.rmtree(final_dest)
+            shutil.copytree(lib_dir, final_dest)
+            
+            # Update lockfile
+            self.lockfile.add_package(package_name, resolved_version, checksum)
+            
+            print(f"✔ Installed {package_name}@{resolved_version} → {final_dest}")
     
     def _install_local(self, src: pathlib.Path):
         """Install a local library."""

@@ -1,0 +1,10 @@
+{
+  "name": "semver_demo",
+  "version": "1.0.0",
+  "description": "Demo of semantic version resolver",
+  "dependencies": {
+    "math_utils": "std/math@^1.1",
+    "string_utils": "std/string@~2.0",
+    "net_utils": "std/net@>=1.0 <2.0"
+  }
+} 
