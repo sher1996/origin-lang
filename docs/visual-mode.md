@@ -1,222 +1,103 @@
-# Visual Mode Import/Export
+# Visual Mode
 
-The Origin language now includes a comprehensive visual programming interface with full import/export capabilities.
-
-## Overview
-
-The visual mode allows users to create Origin programs using a drag-and-drop block interface, with seamless conversion between visual blocks and text-based Origin code.
+The Origin visual editor provides a drag-and-drop interface for building Origin programs using visual blocks.
 
 ## Features
 
-### Block Registry
-- **Centralized Block Management**: All block definitions are managed through a singleton `BlockRegistry`
-- **Extensible**: Easy to add new block types with custom serialize/deserialize logic
-- **Type Safety**: Full TypeScript support with proper type definitions
+### Block Palette
+- **Say Block**: Output text to console
+- **Let Block**: Define variables
+- **Repeat Block**: Loop execution
+- **Define Block**: Create functions
+- **Call Block**: Call functions
+- **Import Block**: Import modules
+- **String Block**: String literals
 
-### Supported Block Types
-- **Output**: `say` - Print expressions
-- **Variables**: `let` - Variable assignment
-- **Data**: `string`, `number` - Literal values
-- **System**: `import` - Module imports
-- **Control**: `repeat`, `if` - Flow control
-- **Functions**: `function` - Function definitions
-
-### Import/Export Formats
-- **Origin Code (.origin)**: Text-based Origin language files
-- **JSON Blocks (.json)**: Visual block data in JSON format
-- **Paste Import**: Direct code pasting into the interface
-
-## Usage
-
-### Frontend (Visual Interface)
+### Import/Export Workflow
 
 #### Import
-1. **File Import**: Click "Import" to load `.origin` files
-2. **JSON Import**: Click "Import JSON" to load block data
-3. **Paste Import**: Click "Paste Import" to paste code directly
+1. **File Import**: Click "Import File" and select a `.origin` file
+2. **Paste Code**: Click "Paste Code" and paste Origin code directly
+3. **Auto-layout**: Imported blocks are automatically positioned in a vertical flow
 
 #### Export
-1. **Code Export**: Click "Export" to save as `.origin` file
-2. **JSON Export**: Click "Export JSON" to save block data
-3. **Validation**: Click "Validate" to test round-trip conversion
+1. **Export Code**: Click "Export Code" to download the current canvas as a `.origin` file
+2. **Round-trip**: Import → edit → export maintains semantic equivalence
 
-### Backend (CLI)
+### CLI Integration
 
 ```bash
 # Import .origin file to JSON blocks
-python src/cli.py viz import program.origin
+origin viz import examples/mapper_demo/hello.origin --out hello.json
 
 # Export JSON blocks to .origin file
-python src/cli.py viz export blocks.json
+origin viz export hello.json --out hello_roundtrip.origin
 
-# Validate round-trip conversion
-python src/cli.py viz validate program.origin
+# Verify round-trip (should be identical)
+diff examples/mapper_demo/hello.origin hello_roundtrip.origin
+```
+
+### Development
+
+```bash
+# Start the visual editor
+cd visual
+npm run dev
+
+# Run tests
+npm test
+
+# Build for production
+npm run build
 ```
 
 ## Architecture
 
-### Block Registry Pattern
-```typescript
-// Register new block type
-blockRegistry.register({
-  id: 'custom',
-  label: 'Custom Block',
-  astType: 'CustomNode',
-  inputs: [...],
-  outputs: [...],
-  serialize: (inputs) => ({ type: 'CustomNode', ...inputs }),
-  deserialize: (astNode) => ({ ...astNode }),
-  color: 'blue'
-});
-```
-
-### Transform Pipeline
-```
-Code ↔ AST ↔ Blocks ↔ JSON
-```
-
-1. **Code to AST**: Parse Origin syntax
-2. **AST to Blocks**: Convert to visual representation
-3. **Blocks to JSON**: Serialize for storage
-4. **JSON to Blocks**: Deserialize from storage
-5. **Blocks to AST**: Convert back to program structure
-6. **AST to Code**: Generate Origin syntax
-
-### Auto-Layout
-Multiple layout algorithms available:
-- **Vertical**: Simple stack layout
-- **Grid**: Organized grid layout
-- **Smart**: Grouped by block type
-- **Flow**: Execution order layout
-- **Compact**: Dense arrangement
-
-## Testing
-
-### Round-Trip Tests
-Comprehensive test suite ensures:
-- Code → Blocks → Code conversion preserves semantics
-- All block types handle serialization correctly
-- Error handling for invalid inputs
-- JSON serialization/deserialization
-
-### Test Commands
-```bash
-# Run visual mode tests
-python tests/test_visual_roundtrip.py
-
-# Run all tests
-python -m pytest tests/
-```
-
-## Error Handling
-
-### Frontend
-- Graceful error display with status messages
-- Fallback to error nodes for invalid blocks
-- Input validation with type checking
-
-### Backend
-- Comprehensive exception handling
-- Detailed error messages for debugging
-- Graceful degradation for unknown block types
-
-## Future Enhancements
-
-### Planned Features
-- **Block Connections**: Visual connections between blocks
-- **Custom Blocks**: User-defined block types
-- **Templates**: Pre-built program templates
-- **Collaboration**: Real-time collaborative editing
-- **Version Control**: Block-level version history
-
-### Extensibility
-- **Plugin System**: Third-party block extensions
-- **Custom Themes**: Visual customization
-- **Export Formats**: Additional output formats (SVG, PDF)
-
-## API Reference
-
-### BlockDefinition Interface
-```typescript
-interface BlockDefinition {
-  id: string;
-  label: string;
-  astType: string;
-  inputs: BlockInput[];
-  outputs: BlockOutput[];
-  serialize: (inputs: Record<string, any>) => any;
-  deserialize: (astNode: any) => Record<string, any>;
-  color?: string;
-  icon?: string;
-}
-```
+### Block Definitions
+- `visual/src/blocks/definitions.ts`: Block registry with serialize/deserialize functions
+- Each block maps to an AST node type with inputs/outputs
 
 ### Transform Functions
-```typescript
-// Core transform functions
-blocksToAST(blocks: BlockInstance[]): ASTProgram
-astToBlocks(ast: ASTProgram): BlockInstance[]
-astToCode(ast: ASTProgram): string
-codeToAST(code: string): ASTProgram
+- `visual/src/lib/transform.ts`: Frontend AST ↔ blocks conversion
+- `src/transform/blocks_to_ast.py`: Backend CLI integration
 
-// JSON utilities
-blocksToJSON(blocks: BlockInstance[]): string
-jsonToBlocks(jsonData: string): BlockInstance[]
-
-// Validation
-validateRoundTrip(originalCode: string): ValidationResult
-```
-
-### Layout Functions
-```typescript
-// Layout algorithms
-verticalLayoutBlocks(blocks: BlockInstance[]): BlockInstance[]
-gridLayoutBlocks(blocks: BlockInstance[]): BlockInstance[]
-smartLayoutBlocks(blocks: BlockInstance[]): BlockInstance[]
-autoChooseLayout(blocks: BlockInstance[]): BlockInstance[]
-```
+### Auto-layout
+- `visual/src/lib/autoLayout.ts`: Simple vertical flow positioning
+- Imported blocks are automatically arranged
 
 ## Examples
 
-### Simple Program
+### Hello World
 ```origin
-say "Hello, World!"
-let x = 42
-say x
+say "Hello, Origin."
 ```
 
-### Complex Program
+### Arithmetic
 ```origin
-import "math_utils"
-let x = 10
-let y = 20
-if x > y:
-  say "x is greater"
-else:
-  say "y is greater"
-repeat 3 times:
-  say "Loop iteration"
-function add(a, b):
-  let result = a + b
-  say result
+let x = 5
+let y = x * 3 - 4
+say y          # → 11
+say x + y      # → 16
 ```
 
-## Troubleshooting
+## Testing
 
-### Common Issues
-1. **Import Fails**: Check file format and syntax
-2. **Export Errors**: Verify block data integrity
-3. **Layout Issues**: Try different layout algorithms
-4. **Validation Fails**: Check for unsupported syntax
+### Backend Tests
+```bash
+python -m pytest tests/test_transform_roundtrip.py
+```
 
-### Debug Mode
-Enable debug logging for detailed error information:
-```typescript
-// Frontend
-console.log('Block data:', blocks);
-console.log('AST:', ast);
+### Frontend Tests
+```bash
+cd visual
+npm test
+```
 
-// Backend
-import logging
-logging.basicConfig(level=logging.DEBUG)
-``` 
+## Future Enhancements
+
+- [ ] Connection lines between blocks
+- [ ] Block parameter editing
+- [ ] Syntax highlighting
+- [ ] Real-time preview
+- [ ] Block validation
+- [ ] Undo/redo functionality 

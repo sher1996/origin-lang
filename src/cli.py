@@ -3,6 +3,7 @@ import argparse
 import pathlib
 import sys
 import os
+import json
 
 # Import the existing modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -18,7 +19,6 @@ from src.origin.recorder import Recorder
 from src.origin.utils import get_recording_path
 from src.origin.replayer import Replayer
 from src.origin.replay_shell import ReplayShell
-from src.transform.blocks_to_ast import main as viz_main
 
 def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, record: bool = False) -> None:
     with open(filename) as f:
@@ -71,15 +71,15 @@ def main():
     
     # Visual editor commands
     viz_parser = subparsers.add_parser("viz", help="Visual editor commands")
-    viz_subparsers = viz_parser.add_subparsers(dest="viz_command", help="Visual editor subcommands")
+    viz_subparsers = viz_parser.add_subparsers(dest="viz_command", help="Available viz commands")
     
     viz_import_parser = viz_subparsers.add_parser("import", help="Import .origin file to JSON blocks")
     viz_import_parser.add_argument("input", help="Input .origin file")
-    viz_import_parser.add_argument("--out", help="Output JSON file (default: input.json)")
+    viz_import_parser.add_argument("--out", help="Output JSON file (default: stdout)")
     
     viz_export_parser = viz_subparsers.add_parser("export", help="Export JSON blocks to .origin file")
     viz_export_parser.add_argument("input", help="Input JSON file")
-    viz_export_parser.add_argument("--out", help="Output .origin file (default: input.origin)")
+    viz_export_parser.add_argument("--out", help="Output .origin file (default: stdout)")
     
     args = arg_parser.parse_args()
     
@@ -133,25 +133,37 @@ def main():
             PackageManager().remove(args.name)
         
         elif args.command == "viz":
-            if not args.viz_command:
+            # Import the transform module
+            from src.transform.blocks_to_ast import code_to_blocks, blocks_to_code
+            
+            if args.viz_command == "import":
+                with open(args.input, 'r') as f:
+                    code = f.read()
+                
+                blocks = code_to_blocks(code)
+                output = json.dumps(blocks, indent=2)
+                
+                if args.out:
+                    with open(args.out, 'w') as f:
+                        f.write(output)
+                else:
+                    print(output)
+            
+            elif args.viz_command == "export":
+                with open(args.input, 'r') as f:
+                    blocks = json.load(f)
+                
+                code = blocks_to_code(blocks)
+                
+                if args.out:
+                    with open(args.out, 'w') as f:
+                        f.write(code)
+                else:
+                    print(code)
+            
+            else:
                 viz_parser.print_help()
                 sys.exit(1)
-            
-            # Set up sys.argv for the viz_main function
-            original_argv = sys.argv
-            if args.viz_command == "import":
-                sys.argv = ["blocks_to_ast.py", "import", args.input]
-                if args.out:
-                    sys.argv.append(args.out)
-            elif args.viz_command == "export":
-                sys.argv = ["blocks_to_ast.py", "export", args.input]
-                if args.out:
-                    sys.argv.append(args.out)
-            
-            try:
-                viz_main()
-            finally:
-                sys.argv = original_argv
     
     except OriginPkgError as e:
         print(f"OriginPkgError: {e}")
