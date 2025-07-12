@@ -1,0 +1,24 @@
+{"id": "LetNode:n", "ts": 1752280195.3326955, "env": {"variables": {}, "functions": [], "node_type": "LetNode"}, "event_num": 0}
+{"id": "LetNode:result", "ts": 1752280195.3326955, "env": {"variables": {"n": 5}, "functions": [], "node_type": "LetNode"}, "event_num": 1}
+{"id": "RepeatNode:2859565319824", "ts": 1752280195.3326955, "env": {"variables": {"n": 5, "result": 1}, "functions": [], "node_type": "RepeatNode"}, "event_num": 2}
+{"id": "LetNode:i", "ts": 1752280195.333717, "env": {"variables": {"n": 5, "result": 1}, "functions": [], "node_type": "LetNode"}, "event_num": 3}
+{"id": "LetNode:result", "ts": 1752280195.333717, "env": {"variables": {"n": 5, "result": 1, "i": 4}, "functions": [], "node_type": "LetNode"}, "event_num": 4}
+{"id": "SayNode:result", "ts": 1752280195.333717, "env": {"variables": {"n": 5, "result": 4, "i": 4}, "functions": [], "node_type": "SayNode"}, "event_num": 5}
+{"id": "LetNode:n", "ts": 1752280195.333717, "env": {"variables": {"n": 5, "result": 4, "i": 4}, "functions": [], "node_type": "LetNode"}, "event_num": 6}
+{"id": "LetNode:i", "ts": 1752280195.333717, "env": {"variables": {"n": 4, "result": 4, "i": 4}, "functions": [], "node_type": "LetNode"}, "event_num": 7}
+{"id": "LetNode:result", "ts": 1752280195.333717, "env": {"variables": {"n": 4, "result": 4, "i": 3}, "functions": [], "node_type": "LetNode"}, "event_num": 8}
+{"id": "SayNode:result", "ts": 1752280195.333717, "env": {"variables": {"n": 4, "result": 12, "i": 3}, "functions": [], "node_type": "SayNode"}, "event_num": 9}
+{"id": "LetNode:n", "ts": 1752280195.333717, "env": {"variables": {"n": 4, "result": 12, "i": 3}, "functions": [], "node_type": "LetNode"}, "event_num": 10}
+{"id": "LetNode:i", "ts": 1752280195.333717, "env": {"variables": {"n": 3, "result": 12, "i": 3}, "functions": [], "node_type": "LetNode"}, "event_num": 11}
+{"id": "LetNode:result", "ts": 1752280195.333717, "env": {"variables": {"n": 3, "result": 12, "i": 2}, "functions": [], "node_type": "LetNode"}, "event_num": 12}
+{"id": "SayNode:result", "ts": 1752280195.333717, "env": {"variables": {"n": 3, "result": 24, "i": 2}, "functions": [], "node_type": "SayNode"}, "event_num": 13}
+{"id": "LetNode:n", "ts": 1752280195.333717, "env": {"variables": {"n": 3, "result": 24, "i": 2}, "functions": [], "node_type": "LetNode"}, "event_num": 14}
+{"id": "LetNode:i", "ts": 1752280195.3346891, "env": {"variables": {"n": 2, "result": 24, "i": 2}, "functions": [], "node_type": "LetNode"}, "event_num": 15}
+{"id": "LetNode:result", "ts": 1752280195.3346891, "env": {"variables": {"n": 2, "result": 24, "i": 1}, "functions": [], "node_type": "LetNode"}, "event_num": 16}
+{"id": "SayNode:result", "ts": 1752280195.3346891, "env": {"variables": {"n": 2, "result": 24, "i": 1}, "functions": [], "node_type": "SayNode"}, "event_num": 17}
+{"id": "LetNode:n", "ts": 1752280195.3346891, "env": {"variables": {"n": 2, "result": 24, "i": 1}, "functions": [], "node_type": "LetNode"}, "event_num": 18}
+{"id": "LetNode:i", "ts": 1752280195.3346891, "env": {"variables": {"n": 1, "result": 24, "i": 1}, "functions": [], "node_type": "LetNode"}, "event_num": 19}
+{"id": "LetNode:result", "ts": 1752280195.3346891, "env": {"variables": {"n": 1, "result": 24, "i": 0}, "functions": [], "node_type": "LetNode"}, "event_num": 20}
+{"id": "SayNode:result", "ts": 1752280195.3346891, "env": {"variables": {"n": 1, "result": 0, "i": 0}, "functions": [], "node_type": "SayNode"}, "event_num": 21}
+{"id": "LetNode:n", "ts": 1752280195.3346891, "env": {"variables": {"n": 1, "result": 0, "i": 0}, "functions": [], "node_type": "LetNode"}, "event_num": 22}
+{"id": "SayNode:\"Final result: \" + r", "ts": 1752280195.3346891, "env": {"variables": {"n": 0, "result": 0, "i": 0}, "functions": [], "node_type": "SayNode"}, "event_num": 23}

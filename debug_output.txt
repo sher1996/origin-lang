@@ -1,0 +1,3 @@
+Source: foo "bar"
+Tokens: [('EXPR', 'foo "bar"'), ('NEWLINE', None)]
+AST: []
