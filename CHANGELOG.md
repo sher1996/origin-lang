@@ -2,6 +2,50 @@
 
 All notable changes to the Origin Language project will be documented in this file.
 
+## [0.5.0] - 2024-12-10
+
+### Added
+- **Live Preview Pane (Chapter 24)**: Real-time code execution with sandboxed iframe
+- **Three-Column Layout**: Palette ▸ Canvas ▸ Preview with responsive design
+- **Debounced Code Generation**: 300ms delay for smooth preview updates
+- **Connection System**: Visual data flow with SVG connection lines between blocks
+- **Grid Snapping**: 10px grid background for precise block positioning
+- **Error Overlay**: Red overlay with error messages for syntax/runtime errors
+- **Constant Block**: New numeric constant block for testing preview functionality
+- **Preview Sandbox**: Safe execution environment with console.log capture
+- **Connection Hooks**: `useConnections` hook for managing block connections
+- **Connection Lines Component**: SVG-based connection rendering with arrows
+- **Error Handling**: Comprehensive error display in preview pane
+- **Testing Infrastructure**: Vitest setup with React Testing Library
+
+### Changed
+- **Visual Editor Layout**: Upgraded from two-column to three-column design
+- **Canvas Component**: Added grid background and connection line rendering
+- **Block Rendering**: Enhanced with input/output connection dots
+- **App Component**: Integrated preview pane and error overlay
+- **Transform Functions**: Added error handling for code generation
+- **Documentation**: Updated visual mode docs with live preview features
+
+### Technical Details
+- New components: `PreviewPane.tsx`, `ConnectionLines.tsx`, `ErrorOverlay.tsx`
+- New hooks: `useConnections.ts`, `useDebounce.ts`
+- Enhanced transform: `blocksToCodeWithErrorHandling()` function
+- Testing setup: Vitest configuration with React Testing Library
+- Updated dependencies: Added testing libraries and vitest
+
+### Live Preview Features
+- **Real-time Execution**: Code updates automatically with debouncing
+- **Sandboxed Environment**: Safe execution in iframe with console capture
+- **Error Display**: Syntax and runtime errors with red overlay
+- **Output Capture**: Console.log results displayed in preview pane
+- **Connection Visualization**: SVG lines showing data flow between blocks
+
+### Backward Compatibility
+- All existing visual editor functionality remains unchanged
+- Import/export workflow continues to work
+- Block definitions and transform functions maintain compatibility
+- No breaking changes to existing APIs
+
 ## [0.4.0] - 2024-12-09
 
 ### Added

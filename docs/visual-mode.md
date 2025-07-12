@@ -4,6 +4,11 @@ The Origin visual editor provides a drag-and-drop interface for building Origin 
 
 ## Features
 
+### Three-Column Layout
+- **Palette**: Drag blocks from the left sidebar
+- **Canvas**: Build your program in the center area
+- **Live Preview**: See real-time execution results on the right
+
 ### Block Palette
 - **Say Block**: Output text to console
 - **Let Block**: Define variables
@@ -12,6 +17,7 @@ The Origin visual editor provides a drag-and-drop interface for building Origin 
 - **Call Block**: Call functions
 - **Import Block**: Import modules
 - **String Block**: String literals
+- **Constant Block**: Numeric constants
 
 ### Import/Export Workflow
 
@@ -23,6 +29,17 @@ The Origin visual editor provides a drag-and-drop interface for building Origin 
 #### Export
 1. **Export Code**: Click "Export Code" to download the current canvas as a `.origin` file
 2. **Round-trip**: Import → edit → export maintains semantic equivalence
+
+### Live Preview
+- **Real-time Execution**: Code updates automatically with 300ms debouncing
+- **Sandboxed Environment**: Safe execution in iframe with console capture
+- **Error Handling**: Syntax and runtime errors display with red overlay
+- **Output Display**: Console.log results appear in the preview pane
+
+### Connection System
+- **Data Flow**: Connect block outputs to inputs with visual lines
+- **Grid Snapping**: 10px grid for precise block positioning
+- **Drag Connections**: Drag from output dots to create connections
 
 ### CLI Integration
 
@@ -95,9 +112,12 @@ npm test
 
 ## Future Enhancements
 
-- [ ] Connection lines between blocks
+- [x] Connection lines between blocks
+- [x] Real-time preview
+- [x] Error overlay
+- [x] Grid snapping
 - [ ] Block parameter editing
 - [ ] Syntax highlighting
-- [ ] Real-time preview
 - [ ] Block validation
-- [ ] Undo/redo functionality 
+- [ ] Undo/redo functionality
+- [ ] Canvas panning and zooming 

@@ -137,6 +137,20 @@ export const BLOCK_DEFINITIONS: Record<string, BlockDefinition> = {
     ],
     serialize: (data) => ({ type: 'StringNode', value: data.value }),
     deserialize: (data) => ({ value: data.value })
+  },
+  
+  constant: {
+    id: 'constant',
+    label: 'Constant',
+    astType: 'ConstantNode',
+    inputs: [
+      { id: 'value', label: 'Value', type: 'number', required: true }
+    ],
+    outputs: [
+      { id: 'value', label: 'Value', type: 'value' }
+    ],
+    serialize: (data) => ({ type: 'ConstantNode', value: data.value }),
+    deserialize: (data) => ({ value: data.value })
   }
 };
 

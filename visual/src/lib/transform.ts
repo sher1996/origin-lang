@@ -67,10 +67,25 @@ export function blocksToCode(blocks: BlockInstance[]): string {
         return `import ${node.path}`;
       case 'StringNode':
         return `"${node.value}"`;
+      case 'ConstantNode':
+        return `${node.value}`;
       default:
         return `# Unknown node type: ${node.type}`;
     }
   }).join('\n');
+}
+
+// Generate Origin code from blocks with error handling
+export function blocksToCodeWithErrorHandling(blocks: BlockInstance[]): { code: string; error?: string } {
+  try {
+    const code = blocksToCode(blocks);
+    return { code };
+  } catch (error) {
+    return { 
+      code: '', 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    };
+  }
 }
 
 // Parse Origin code to blocks
