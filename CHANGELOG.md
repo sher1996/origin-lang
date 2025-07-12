@@ -5,6 +5,7 @@ All notable changes to the Origin Language project will be documented in this fi
 ## [0.3.0] - 2024-12-08
 
 ### Added
+- **Replay & step-back debugger (Chapter 21)**: Step through execution history interactively with `origin replay ... --step`.
 - **Semantic version resolver**: npm-style version range parsing and resolution
 - **Lockfile system**: `origin.lock` for reproducible builds and version pinning
 - **Registry integration**: Resolve packages from registry using semantic versioning

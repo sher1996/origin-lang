@@ -65,6 +65,71 @@ The recording file will contain 3 events:
 2. `LetNode:y` - sets y = 10  
 3. `SayNode:x + y` - prints 15
 
+## Replay & Step-Back
+
+Origin supports interactive replay and time-travel debugging of recorded executions.
+
+### Basic Command
+
+```bash
+origin replay myrun.orirec --step
+```
+
+This opens an interactive REPL for stepping through execution history:
+
+```
+(r)un  (n)ext  (p)rev  (g)o <k>  (q)uit
+```
+
+#### Key Bindings
+
+| Key         | Action                                 |
+|-------------|----------------------------------------|
+| `n`/`next`  | Step to next event                     |
+| `p`/`prev`  | Step to previous event                 |
+| `g <k>`     | Jump to event index `<k>` (0-based)    |
+| `r`/`run`   | Run to the end                         |
+| `q`/`quit`  | Exit replay shell                      |
+| `h`/`help`  | Show help                              |
+
+#### Example Session
+
+```bash
+origin replay examples/record_demo/loop-20250712-*.orirec --step
+(r)un (n)ext (p)rev (g)o <k> (q)uit: n
+[1/24] LetNode:n
+No changes
+(r)un (n)ext (p)rev (g)o <k> (q)uit: n
+[2/24] LetNode:result
+Changes:
+  n: None → 5
+(r)un (n)ext (p)rev (g)o <k> (q)uit: p
+[1/24] LetNode:n
+Changes:
+  n: 5 → None
+(r)un (n)ext (p)rev (g)o <k> (q)uit: g 10
+[11/24] LetNode:n
+Changes:
+  n: 4 → 1
+  result: 12 → 0
+  i: 0 → 0
+(r)un (n)ext (p)rev (g)o <k> (q)uit: q
+Goodbye!
+```
+
+At each step, the REPL displays:
+- The current event index and node id
+- A pretty diff of variable changes (before/after)
+- Truncated values as `<truncated>` if over 64 KiB
+
+#### Custom Analysis
+
+Because `.orirec` files are JSONL, you can pipe them through tools like `jq` for custom analysis:
+
+```bash
+jq '.env.variables' myrun.orirec
+```
+
 ## Performance
 
 When `--record` is not used, there is **zero runtime overhead**. The recorder uses branch-predict-friendly checks:
@@ -73,20 +138,6 @@ When `--record` is not used, there is **zero runtime overhead**. The recorder us
 if self.recorder:
     self.recorder.record(node_id, env)
 ```
-
-## Coming Soon: Replay
-
-In Chapter 21, you'll be able to replay recorded executions:
-
-```bash
-origin debug example-20241201-143022.orirec
-```
-
-This will provide:
-- Step-by-step execution replay
-- Variable inspection at each step
-- Breakpoint support
-- Interactive debugging
 
 ## Advanced Usage
 
