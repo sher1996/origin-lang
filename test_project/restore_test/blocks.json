@@ -1,0 +1,39 @@
+[
+  {
+    "id": "say-0",
+    "definitionId": "say",
+    "position": {
+      "x": 0,
+      "y": 0
+    },
+    "inputs": {
+      "expr": "\"Hello from test project\""
+    },
+    "outputs": {}
+  },
+  {
+    "id": "let-1",
+    "definitionId": "let",
+    "position": {
+      "x": 200,
+      "y": 100
+    },
+    "inputs": {
+      "name": "x",
+      "expr": "42"
+    },
+    "outputs": {}
+  },
+  {
+    "id": "say-2",
+    "definitionId": "say",
+    "position": {
+      "x": 400,
+      "y": 200
+    },
+    "inputs": {
+      "expr": "x"
+    },
+    "outputs": {}
+  }
+]

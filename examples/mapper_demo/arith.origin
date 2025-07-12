@@ -1,0 +1,4 @@
+let x = 5
+let y = x * 3 - 4
+say y          # → 11
+say x + y      # → 16 
