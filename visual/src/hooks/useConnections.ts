@@ -71,6 +71,7 @@ export function useConnections() {
 
   return {
     connections,
+    setConnections,
     draggingConnection,
     addConnection,
     removeConnection,

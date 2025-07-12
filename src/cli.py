@@ -81,6 +81,12 @@ def main():
     viz_export_parser.add_argument("input", help="Input JSON file")
     viz_export_parser.add_argument("--out", help="Output .origin file (default: stdout)")
     
+    viz_save_parser = viz_subparsers.add_parser("save", help="Save current project as .originproj file")
+    viz_save_parser.add_argument("output", help="Output .originproj file")
+    
+    viz_open_parser = viz_subparsers.add_parser("open", help="Open .originproj file and extract to current directory")
+    viz_open_parser.add_argument("input", help="Input .originproj file")
+    
     args = arg_parser.parse_args()
     
     if not args.command:
@@ -133,8 +139,9 @@ def main():
             PackageManager().remove(args.name)
         
         elif args.command == "viz":
-            # Import the transform module
+            # Import the transform modules
             from src.transform.blocks_to_ast import code_to_blocks, blocks_to_code
+            from src.transform.project_zip import save_current_project, extract_project_zip
             
             if args.viz_command == "import":
                 with open(args.input, 'r') as f:
@@ -160,6 +167,25 @@ def main():
                         f.write(code)
                 else:
                     print(code)
+            
+            elif args.viz_command == "save":
+                try:
+                    save_current_project(args.output)
+                    print(f"Project saved to {args.output}")
+                except Exception as e:
+                    print(f"Error saving project: {e}")
+                    sys.exit(1)
+            
+            elif args.viz_command == "open":
+                try:
+                    # Extract to current directory
+                    project_data = extract_project_zip(args.input, '.')
+                    print(f"Project extracted from {args.input}")
+                    print(f"Project: {project_data['metadata'].get('name', 'Unknown')}")
+                    print(f"Version: {project_data['metadata'].get('version', '1.0.0')}")
+                except Exception as e:
+                    print(f"Error opening project: {e}")
+                    sys.exit(1)
             
             else:
                 viz_parser.print_help()

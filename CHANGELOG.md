@@ -2,6 +2,31 @@
 
 All notable changes to the Origin Language project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **Chapter 25: Save/Export functionality**
+  - Added `.originproj` project file format (ZIP with blocks, connections, metadata)
+  - Added "Save Project" and "Open Project" buttons to visual editor toolbar
+  - Added auto-save functionality with localStorage (every 10 seconds)
+  - Added CLI commands: `origin viz save` and `origin viz open`
+  - Added project metadata support (name, description, version, timestamps)
+  - Added automatic README.md generation for projects
+  - Added round-trip testing for save/open functionality
+
+### Changed
+- Updated visual editor toolbar with new save/load buttons
+- Enhanced project structure with proper metadata handling
+
+### Technical
+- Added JSZip dependency for project file compression
+- Added ProjectExporter class for frontend save/load
+- Added project_zip.py module for backend CLI functionality
+- Added useAutosave hook for browser-based session persistence
+- Added comprehensive test coverage for save/load functionality
+
+## [0.5.0] - 2024-12-10
+
 ## [0.5.0] - 2024-12-10
 
 ### Added
