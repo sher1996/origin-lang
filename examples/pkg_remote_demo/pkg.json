@@ -1,0 +1,7 @@
+{
+  "name": "pkg-remote-demo",
+  "version": "0.1.0",
+  "dependencies": {
+    "math_utils": "https://github.com/sher1996/origin-pkgs/releases/download/v0.2.0/math_utils-0.2.0.tar.gz#sha256=642FB2E16399776F1F352245A3A522DE2BB89969220718CDE0595726CC752F88"
+  }
+} 
