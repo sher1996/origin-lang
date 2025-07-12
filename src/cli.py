@@ -11,7 +11,7 @@ import lexer
 import parser
 
 from src.origin.pkgmgr import PackageManager
-from src.origin.errors import OriginPkgError
+from src.origin.errors import OriginPkgError, PublishError
 from src.origin.registry import Registry, parse_package_spec
 from src.origin.net import is_url
 from src.origin.evaluator import Evaluator
@@ -19,6 +19,7 @@ from src.origin.recorder import Recorder
 from src.origin.utils import get_recording_path
 from src.origin.replayer import Replayer
 from src.origin.replay_shell import ReplayShell
+from src.origin.publish import publish_package
 
 def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, record: bool = False) -> None:
     with open(filename) as f:
@@ -68,6 +69,12 @@ def main():
     
     remove_parser = subparsers.add_parser("remove", help="Remove an installed library")
     remove_parser.add_argument("name", type=str, help="Library name")
+    
+    # Publish command
+    publish_parser = subparsers.add_parser("publish", help="Publish package to GitHub Releases")
+    publish_parser.add_argument("--token", type=str, help="GitHub personal access token")
+    publish_parser.add_argument("--dry-run", action="store_true", help="Show what would be done without publishing")
+    publish_parser.add_argument("--tag", type=str, help="Custom release tag (defaults to v{version})")
     
     # Visual editor commands
     viz_parser = subparsers.add_parser("viz", help="Visual editor commands")
@@ -137,6 +144,18 @@ def main():
         
         elif args.command == "remove":
             PackageManager().remove(args.name)
+        
+        elif args.command == "publish":
+            try:
+                publish_package(
+                    project_path=pathlib.Path.cwd(),
+                    token=args.token,
+                    dry_run=args.dry_run,
+                    tag=args.tag
+                )
+            except PublishError as e:
+                print(f"PublishError: {e}")
+                sys.exit(1)
         
         elif args.command == "viz":
             # Import the transform modules
