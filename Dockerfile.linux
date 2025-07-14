@@ -1,0 +1,33 @@
+# Dockerfile for building Linux Origin executables
+FROM ubuntu:22.04
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip3 install --no-cache-dir \
+    pyinstaller>=5.0 \
+    requests>=2.32.0 \
+    pip-licenses
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy project files
+COPY . .
+
+# Build script
+RUN echo '#!/bin/bash\n\
+echo "Building Origin for Linux..."\n\
+python3 -m PyInstaller --onefile --distpath dist --workpath build build/pyinstaller.spec\n\
+echo "Build complete!"\n\
+ls -la dist/\n\
+' > /usr/local/bin/build-linux.sh && chmod +x /usr/local/bin/build-linux.sh
+
+# Default command
+CMD ["/usr/local/bin/build-linux.sh"] 

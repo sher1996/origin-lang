@@ -1,0 +1,51 @@
+# Dockerfile for cross-compiling Windows Origin executables
+FROM ubuntu:22.04
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-dev \
+    wine \
+    wine32 \
+    wine64 \
+    wget \
+    unzip \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip3 install --no-cache-dir \
+    pyinstaller>=5.0 \
+    requests>=2.32.0 \
+    pip-licenses
+
+# Set up Wine environment
+ENV WINEPREFIX=/root/.wine
+ENV WINEARCH=win64
+RUN wine wineboot --init
+
+# Install Python for Windows in Wine
+RUN wget https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe -O python-installer.exe
+RUN wine python-installer.exe /quiet InstallAllUsers=1 PrependPath=1
+RUN rm python-installer.exe
+
+# Install PyInstaller in Windows Python
+RUN wine python -m pip install pyinstaller>=5.0
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy project files
+COPY . .
+
+# Build script
+RUN echo '#!/bin/bash\n\
+echo "Building Origin for Windows..."\n\
+wine python -m PyInstaller --onefile --distpath dist --workpath build build/pyinstaller.spec\n\
+echo "Build complete!"\n\
+ls -la dist/\n\
+' > /usr/local/bin/build-win.sh && chmod +x /usr/local/bin/build-win.sh
+
+# Default command
+CMD ["/usr/local/bin/build-win.sh"] 

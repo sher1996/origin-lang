@@ -51,8 +51,18 @@ def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, re
             print("\n" + "="*50)
             print("PROFILING RESULTS")
             print("="*50)
-            print("Profiling not yet implemented in current evaluator")
-            print("Use the visitor-based evaluator for detailed profiling")
+            # Get profiling stats from the evaluator if available
+            if hasattr(evaluator, 'visitor') and hasattr(evaluator.visitor, 'get_profile_stats'):
+                stats = evaluator.visitor.get_profile_stats()
+                if stats:
+                    print("Node execution counts:")
+                    for node_type, count in sorted(stats.items(), key=lambda x: x[1], reverse=True):
+                        print(f"  {node_type}: {count}")
+                else:
+                    print("No profiling data available")
+            else:
+                print("Profiling not yet implemented in current evaluator")
+                print("Use the visitor-based evaluator for detailed profiling")
     finally:
         if recorder:
             recorder.close()
@@ -97,6 +107,14 @@ def main():
     audit_parser.add_argument("--level", choices=["info", "warn", "crit"], default="warn", 
                              help="Minimum severity level to report (default: warn)")
     audit_parser.add_argument("--ignore", nargs="+", help="Packages to ignore during audit")
+    
+    # Package command
+    package_parser = subparsers.add_parser("package", help="Build standalone Origin executables")
+    package_parser.add_argument("--platform", choices=["win", "mac", "linux"], 
+                               help="Target platform (defaults to current platform)")
+    package_parser.add_argument("--output", type=str, help="Output directory (defaults to dist/)")
+    package_parser.add_argument("--version", help="Version string (defaults to setup.py version)")
+    
     # Visual editor commands
     viz_parser = subparsers.add_parser("viz", help="Visual editor commands")
     viz_subparsers = viz_parser.add_subparsers(dest="viz_command", help="Available viz commands")
@@ -211,6 +229,32 @@ def main():
                     
             except Exception as e:
                 print(f"AuditError: {e}")
+                sys.exit(1)
+        
+        elif args.command == "package":
+            try:
+                from src.origin.cli.package import PackageBuilder
+                from pathlib import Path
+                
+                # Get project root
+                project_root = Path.cwd()
+                
+                # Build the package
+                builder = PackageBuilder(project_root)
+                result = builder.build(
+                    platform_name=args.platform,
+                    output_dir=Path(args.output) if args.output else None,
+                    version=args.version
+                )
+                
+                # Print result as JSON for CI integration
+                print("\n" + "="*50)
+                print("BUILD RESULT")
+                print("="*50)
+                print(json.dumps(result, indent=2))
+                
+            except Exception as e:
+                print(f"PackageError: {e}")
                 sys.exit(1)
         
         elif args.command == "viz":
