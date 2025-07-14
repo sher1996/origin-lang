@@ -80,7 +80,6 @@ class PackageBuilder:
         
         cmd = [
             sys.executable, "-m", "PyInstaller",
-            "--onefile",
             "--distpath", str(output_dir),
             "--workpath", str(self.build_dir),
             str(spec_file)
