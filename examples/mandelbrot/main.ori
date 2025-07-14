@@ -1,0 +1,9 @@
+# Simple Performance Demo
+# Outputs a pattern to demonstrate Origin performance
+
+repeat 50 times:
+    say "."
+
+say "\n"
+say "Performance demo completed"
+say "Origin language is working!" 

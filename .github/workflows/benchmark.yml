@@ -1,0 +1,75 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run benchmarks weekly
+    - cron: '0 2 * * 1'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+    
+    - name: Run benchmarks
+      id: benchmark
+      run: |
+        echo "Running performance benchmarks..."
+        python scripts/bench.py > benchmark_results.txt 2>&1 || true
+        echo "Benchmark results:"
+        cat benchmark_results.txt
+        
+        # Extract timing information for comment
+        if grep -q "Mean:" benchmark_results.txt; then
+          echo "::set-output name=has_results::true"
+          echo "::set-output name=results::$(cat benchmark_results.txt)"
+        else
+          echo "::set-output name=has_results::false"
+        fi
+    
+    - name: Run performance tests
+      run: |
+        echo "Running performance regression tests..."
+        python -m pytest src/origin/tests/test_perf.py -v
+    
+    - name: Comment benchmark results
+      if: steps.benchmark.outputs.has_results == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const results = '${{ steps.benchmark.outputs.results }}';
+          const comment = `## Performance Benchmark Results
+          
+          \`\`\`
+          ${results}
+          \`\`\`
+          
+          **Note**: These are automated benchmark results. Significant performance changes (>5%) should be investigated.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+    
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: benchmark_results.txt 
