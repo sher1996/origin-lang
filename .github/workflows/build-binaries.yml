@@ -150,5 +150,5 @@ jobs:
           
       - name: Generate update manifest
         run: |
-          python scripts/gen_update_manifest.py --version ${{ github.ref_name }} --output releases/update.json
+          python scripts/gen_update_manifest.py --version ${{ github.ref_name }} --dist-dir artifacts --output releases/update.json
           echo "Update manifest generated (not committed to avoid git issues)" 
