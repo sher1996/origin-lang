@@ -67,3 +67,13 @@ export default tseslint.config([
   },
 ])
 ```
+
+## Export Diagram as PNG
+
+You can now export your block diagram as a PNG image:
+
+- Click the **Export → PNG** button in the toolbar (Image icon).
+- The exported PNG will match your current light/dark theme.
+- If your browser supports it, the PNG is also copied to your clipboard (see toast message).
+- Large diagrams (>8k x 8k px) will show a warning and not export.
+- On mobile Safari, only download is supported (no clipboard).
