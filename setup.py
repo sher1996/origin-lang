@@ -15,6 +15,9 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         # Core dependencies
+        "requests>=2.32.0",
+        "pyinstaller>=5.0",
+        "pip-licenses>=4.0.0",
     ],
     extras_require={
         "net": [
