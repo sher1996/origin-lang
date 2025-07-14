@@ -76,6 +76,12 @@ def main():
     publish_parser.add_argument("--dry-run", action="store_true", help="Show what would be done without publishing")
     publish_parser.add_argument("--tag", type=str, help="Custom release tag (defaults to v{version})")
     
+    # Audit command
+    audit_parser = subparsers.add_parser("audit", help="Audit dependency tree for conflicts and outdated packages")
+    audit_parser.add_argument("--json", action="store_true", help="Output results in JSON format")
+    audit_parser.add_argument("--level", choices=["info", "warn", "crit"], default="warn", 
+                             help="Minimum severity level to report (default: warn)")
+    audit_parser.add_argument("--ignore", nargs="+", help="Packages to ignore during audit")
     # Visual editor commands
     viz_parser = subparsers.add_parser("viz", help="Visual editor commands")
     viz_subparsers = viz_parser.add_subparsers(dest="viz_command", help="Available viz commands")
@@ -155,6 +161,38 @@ def main():
                 )
             except PublishError as e:
                 print(f"PublishError: {e}")
+                sys.exit(1)
+        
+        elif args.command == "audit":
+            try:
+                from src.origin.audit import DependencyAuditor, Severity
+                
+                # Parse severity level
+                severity_map = {
+                    "info": Severity.INFO,
+                    "warn": Severity.WARN,
+                    "crit": Severity.CRIT
+                }
+                level = severity_map[args.level]
+                
+                # Run audit
+                auditor = DependencyAuditor()
+                issues = auditor.audit(level=level, ignore_packages=args.ignore)
+                
+                # Format and output report
+                report = auditor.format_report(issues, json_output=args.json)
+                print(report)
+                
+                # Set exit code based on severity
+                if any(issue.severity == Severity.CRIT for issue in issues):
+                    sys.exit(2)
+                elif any(issue.severity == Severity.WARN for issue in issues):
+                    sys.exit(1)
+                else:
+                    sys.exit(0)
+                    
+            except Exception as e:
+                print(f"AuditError: {e}")
                 sys.exit(1)
         
         elif args.command == "viz":

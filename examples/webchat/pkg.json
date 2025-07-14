@@ -1,0 +1,10 @@
+{
+  "name": "webchat",
+  "version": "1.0.0",
+  "description": "A simple web chat application",
+  "dependencies": {
+    "react": "^18.0.0",
+    "ws": "^8.0.0",
+    "lodash": "^4.17.0"
+  }
+} 

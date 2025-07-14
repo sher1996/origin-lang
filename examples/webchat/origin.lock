@@ -1,0 +1,16 @@
+{
+  "packages": {
+    "react": {
+      "version": "18.0.2",
+      "checksum": "abc123def456789"
+    },
+    "ws": {
+      "version": "9.1.0",
+      "checksum": "def456abc789123"
+    },
+    "lodash": {
+      "version": "4.17.21",
+      "checksum": "ghi789def456abc"
+    }
+  }
+} 
