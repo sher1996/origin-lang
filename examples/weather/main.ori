@@ -1,0 +1,6 @@
+import std/http
+import json
+
+let raw = http.http_get(ARGS[0])
+let obj = json.parse(raw)
+print("Temperature:", obj.properties.timeseries[0].data.instant.details.air_temperature, "°C") 

@@ -1,0 +1,7 @@
+# Standard HTTP library for Origin
+# This module provides HTTP functionality when --allow-net is enabled
+
+# Function: http_get(url: String, headers: Map = {}) -> String
+# Performs an HTTP GET request to the specified URL with optional headers
+# Returns the response body as a string
+# Raises OriginError on non-2xx status codes or network errors 

@@ -1,0 +1,8 @@
+{
+  "name": "mandelbrot-demo",
+  "version": "1.0.0",
+  "description": "ASCII Mandelbrot set renderer demonstrating Origin performance",
+  "main": "main.ori",
+  "author": "Origin Team",
+  "license": "MIT"
+} 

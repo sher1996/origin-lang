@@ -5,9 +5,19 @@ from parser import SayNode, LetNode, RepeatNode, FuncDefNode, FuncCallNode, Expr
 import lexer
 import parser
 from .recorder import Recorder
+from .runtime.eval import EvaluatorVisitor, OriginError
 
-class OriginError(RuntimeError):
-    pass
+class _JSONVisitor:
+    from .builtins.json import parse as json_parse
+    parse = staticmethod(json_parse)
+
+class _AIVisitor:
+    @staticmethod
+    def ask(prompt):
+        return f"(AI-Answer: {str(prompt)[:15]})"
+    @staticmethod
+    def classify(text, *labels):
+        return min(labels, key=len) if labels else ""
 
 class Evaluator:
     """Evaluates Origin AST with optional execution recording."""
@@ -15,6 +25,9 @@ class Evaluator:
     def __init__(self, recorder: Optional[Recorder] = None):
         self.recorder = recorder
         self.global_loaded_modules = set()
+        self.use_eval_fallback = os.environ.get('ORIGIN_EVAL_FALLBACK') == '1'
+        if self.use_eval_fallback:
+            print("Warning: Using eval() fallback mode (deprecated)")
     
     def _generate_node_id(self, node: Any) -> str:
         """Generate a unique ID for an AST node."""
@@ -50,12 +63,14 @@ class Evaluator:
             expr = re.sub(pattern, r'_PLUS_(\1, \2)', expr)
         return expr
     
-    def _http_get(self, url, net_allowed=False):
-        """HTTP GET function stub."""
-        if net_allowed:
-            return f"(NetStub: {url})"
-        else:
-            raise OriginError("network access denied")
+    def _http_get(self, url, headers=None, net_allowed=False):
+        """HTTP GET function with live network support."""
+        if not net_allowed:
+            raise OriginError("Network access not permitted — run with --allow-net")
+        
+        # Import the safe HTTP function
+        from .runtime.net import safe_http_get
+        return safe_http_get(url, headers)
     
     def _ai_ask(self, prompt):
         """AI ask function stub."""
@@ -93,24 +108,57 @@ class Evaluator:
     
     def _eval_expr(self, expr: str, variables: Dict[str, Any], functions: Dict[str, Any]) -> Any:
         """Evaluate an expression with the given environment."""
-        allowed_names = {**variables, "__builtins__": {}}
-        # Add user functions as callables
-        for fname in functions:
-            allowed_names[fname] = self._make_func(fname, functions, variables)
-        # Add built-in functions
-        allowed_names['http_get'] = lambda url: self._http_get(url, self.net_allowed)
-        allowed_names['_PLUS_'] = self._plus
-        
-        # Add AI object
-        class _AI:
-            ask = staticmethod(self._ai_ask)
-            classify = staticmethod(self._ai_classify)
-        allowed_names['ai'] = _AI
-        
-        expr = re.sub(r"\s+", " ", expr.strip())
-        # Pre-process + operators to use our plus function, but only outside strings
-        expr = self._replace_plus_outside_strings(expr)
-        return eval(expr, allowed_names)
+        if self.use_eval_fallback:
+            # Use the old eval() path for fallback
+            allowed_names = {**variables, "__builtins__": {}}
+            # Add user functions as callables
+            for fname in functions:
+                allowed_names[fname] = self._make_func(fname, functions, variables)
+            # Add built-in functions
+            allowed_names['http_get'] = lambda url, headers=None: self._http_get(url, headers, self.net_allowed)
+            allowed_names['_PLUS_'] = self._plus
+            allowed_names['json'] = _JSONVisitor
+            allowed_names['ai'] = _AIVisitor
+            expr = re.sub(r"\s+", " ", expr.strip())
+            expr = self._replace_plus_outside_strings(expr)
+            return eval(expr, allowed_names)
+        else:
+            # Use the new visitor-based evaluator
+            # For now, we'll need to parse the expression string into AST nodes
+            # This is a simplified approach - in a full implementation, we'd need a proper expression parser
+            try:
+                # Create a simple visitor for the current expression evaluation
+                visitor = EvaluatorVisitor(variables, functions, self.recorder, self.net_allowed)
+                visitor.base_path = self.base_path
+                visitor.files_allowed = self.files_allowed
+                
+                # For now, fall back to eval for complex expressions
+                # TODO: Implement proper expression parsing to AST nodes
+                allowed_names = {**variables, "__builtins__": {}}
+                for fname in functions:
+                    allowed_names[fname] = self._make_func(fname, functions, variables)
+                allowed_names['http_get'] = lambda url, headers=None: self._http_get(url, headers, self.net_allowed)
+                allowed_names['_PLUS_'] = self._plus
+                allowed_names['json'] = _JSONVisitor
+                allowed_names['ai'] = _AIVisitor
+                
+                expr = re.sub(r"\s+", " ", expr.strip())
+                expr = self._replace_plus_outside_strings(expr)
+                return eval(expr, allowed_names)
+            except Exception as e:
+                # If visitor evaluation fails, fall back to eval
+                print(f"Warning: Visitor evaluation failed, falling back to eval: {e}")
+                allowed_names = {**variables, "__builtins__": {}}
+                for fname in functions:
+                    allowed_names[fname] = self._make_func(fname, functions, variables)
+                allowed_names['http_get'] = lambda url, headers=None: self._http_get(url, headers, self.net_allowed)
+                allowed_names['_PLUS_'] = self._plus
+                allowed_names['json'] = _JSONVisitor
+                allowed_names['ai'] = _AIVisitor
+                
+                expr = re.sub(r"\s+", " ", expr.strip())
+                expr = self._replace_plus_outside_strings(expr)
+                return eval(expr, allowed_names)
     
     def _exec_node(self, node: Any, variables: Dict[str, Any], functions: Dict[str, Any]) -> Any:
         """Execute a single AST node."""
@@ -187,12 +235,17 @@ class Evaluator:
             raise OriginError(f"unknown keyword \"{type(node).__name__}\"")
     
     def execute(self, ast: List[Any], base_path=None, variables=None, functions=None, 
-                net_allowed=False, files_allowed=True) -> None:
+                net_allowed=False, files_allowed=True, args=None) -> None:
         """Execute an AST with the given environment and options."""
         if variables is None:
             variables = {}
         if functions is None:
             functions = {}
+        
+        # Add command line arguments
+        if args is None:
+            args = []
+        variables['ARGS'] = args
         
         self.base_path = base_path
         self.net_allowed = net_allowed

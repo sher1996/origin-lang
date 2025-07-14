@@ -1,0 +1,5 @@
+{
+  "name": "weather-demo",
+  "description": "Fetches real-time weather data and prints the temperature using std/http and json.parse.",
+  "entry": "main.ori"
+} 

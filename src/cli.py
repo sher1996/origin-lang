@@ -4,11 +4,13 @@ import pathlib
 import sys
 import os
 import json
+from typing import cast, List, Any
 
 # Import the existing modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import lexer
 import parser
+from src.origin.parser.optimizations import constant_fold
 
 from src.origin.pkgmgr import PackageManager
 from src.origin.errors import OriginPkgError, PublishError
@@ -21,11 +23,15 @@ from src.origin.replayer import Replayer
 from src.origin.replay_shell import ReplayShell
 from src.origin.publish import publish_package
 
-def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, record: bool = False) -> None:
+def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, record: bool = False, args: list = None, profile: bool = False) -> None:
     with open(filename) as f:
         source = f.read()
     tokens = lexer.tokenize(source)
     ast = parser.parse(tokens)
+    if ast is None:
+        ast = []
+    # Apply constant folding optimization
+    ast = [constant_fold(node) for node in ast]
     
     # Set up recorder if requested
     recorder = None
@@ -38,7 +44,15 @@ def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, re
     # Use evaluator instead of runtime
     evaluator = Evaluator(recorder)
     try:
-        evaluator.execute(ast, base_path=None, net_allowed=net_allowed, files_allowed=files_allowed)
+        evaluator.execute(ast, base_path=None, net_allowed=net_allowed, files_allowed=files_allowed, args=args)
+        
+        # Print profiling information if requested
+        if profile:
+            print("\n" + "="*50)
+            print("PROFILING RESULTS")
+            print("="*50)
+            print("Profiling not yet implemented in current evaluator")
+            print("Use the visitor-based evaluator for detailed profiling")
     finally:
         if recorder:
             recorder.close()
@@ -54,6 +68,7 @@ def main():
     run_parser.add_argument("--allow-files", action="store_true", default=True, help="Allow file operations")
     run_parser.add_argument("--deny-files", action="store_true", help="Deny file operations")
     run_parser.add_argument("--record", action="store_true", help="Record execution to .orirec file")
+    run_parser.add_argument("--profile", action="store_true", help="Print execution profiling statistics")
     
     # Replay command (new functionality)
     replay_parser = subparsers.add_parser("replay", help="Replay recorded execution")
@@ -112,7 +127,10 @@ def main():
             if args.deny_files:
                 files_allowed = False
             
-            run(args.file, net_allowed=args.allow_net, files_allowed=files_allowed, record=args.record)
+            # Pass extra command line arguments as ARGS
+            file_index = sys.argv.index(args.file)
+            extra_args = sys.argv[file_index+1:]
+            run(args.file, net_allowed=args.allow_net, files_allowed=files_allowed, record=args.record, args=extra_args, profile=args.profile)
         
         elif args.command == "replay":
             # Load the recording file
