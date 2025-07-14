@@ -21,7 +21,7 @@ from src.origin.replayer import Replayer
 from src.origin.replay_shell import ReplayShell
 from src.origin.publish import publish_package
 
-def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, record: bool = False) -> None:
+def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, record: bool = False, args: list = None) -> None:
     with open(filename) as f:
         source = f.read()
     tokens = lexer.tokenize(source)
@@ -38,7 +38,7 @@ def run(filename: str, net_allowed: bool = False, files_allowed: bool = True, re
     # Use evaluator instead of runtime
     evaluator = Evaluator(recorder)
     try:
-        evaluator.execute(ast, base_path=None, net_allowed=net_allowed, files_allowed=files_allowed)
+        evaluator.execute(ast, base_path=None, net_allowed=net_allowed, files_allowed=files_allowed, args=args)
     finally:
         if recorder:
             recorder.close()
@@ -112,7 +112,11 @@ def main():
             if args.deny_files:
                 files_allowed = False
             
-            run(args.file, net_allowed=args.allow_net, files_allowed=files_allowed, record=args.record)
+            # Pass extra command line arguments as ARGS
+            import sys
+            file_index = sys.argv.index(args.file)
+            extra_args = sys.argv[file_index+1:]
+            run(args.file, net_allowed=args.allow_net, files_allowed=files_allowed, record=args.record, args=extra_args)
         
         elif args.command == "replay":
             # Load the recording file

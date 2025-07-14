@@ -50,12 +50,14 @@ class Evaluator:
             expr = re.sub(pattern, r'_PLUS_(\1, \2)', expr)
         return expr
     
-    def _http_get(self, url, net_allowed=False):
-        """HTTP GET function stub."""
-        if net_allowed:
-            return f"(NetStub: {url})"
-        else:
-            raise OriginError("network access denied")
+    def _http_get(self, url, headers=None, net_allowed=False):
+        """HTTP GET function with live network support."""
+        if not net_allowed:
+            raise OriginError("Network access not permitted — run with --allow-net")
+        
+        # Import the safe HTTP function
+        from .runtime.net import safe_http_get
+        return safe_http_get(url, headers)
     
     def _ai_ask(self, prompt):
         """AI ask function stub."""
@@ -98,8 +100,14 @@ class Evaluator:
         for fname in functions:
             allowed_names[fname] = self._make_func(fname, functions, variables)
         # Add built-in functions
-        allowed_names['http_get'] = lambda url: self._http_get(url, self.net_allowed)
+        allowed_names['http_get'] = lambda url, headers=None: self._http_get(url, headers, self.net_allowed)
         allowed_names['_PLUS_'] = self._plus
+        
+        # Add JSON object
+        from .builtins.json import parse as json_parse
+        class _JSON:
+            parse = staticmethod(json_parse)
+        allowed_names['json'] = _JSON
         
         # Add AI object
         class _AI:
@@ -187,12 +195,17 @@ class Evaluator:
             raise OriginError(f"unknown keyword \"{type(node).__name__}\"")
     
     def execute(self, ast: List[Any], base_path=None, variables=None, functions=None, 
-                net_allowed=False, files_allowed=True) -> None:
+                net_allowed=False, files_allowed=True, args=None) -> None:
         """Execute an AST with the given environment and options."""
         if variables is None:
             variables = {}
         if functions is None:
             functions = {}
+        
+        # Add command line arguments
+        if args is None:
+            args = []
+        variables['ARGS'] = args
         
         self.base_path = base_path
         self.net_allowed = net_allowed
