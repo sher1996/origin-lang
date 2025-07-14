@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import type { BlockInstance } from '../blocks/definitions';
 import { BLOCK_DEFINITIONS } from '../blocks/definitions';
@@ -15,18 +15,23 @@ interface CanvasProps {
   } | null;
 }
 
-const Canvas: React.FC<CanvasProps> = ({ 
+const Canvas = forwardRef<HTMLDivElement, CanvasProps>(({ 
   blocks, 
   connections = [], 
   draggingConnection = null 
-}) => {
+}, ref) => {
   const { setNodeRef } = useDroppable({
     id: 'canvas',
   });
 
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        if (typeof ref === 'function') ref(node);
+        else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }}
+      id="blocks-root"
       className="flex-1 bg-white border-2 border-dashed border-gray-300 p-4 relative min-h-screen"
       style={{
         backgroundImage: `
@@ -86,6 +91,6 @@ const Canvas: React.FC<CanvasProps> = ({
       })}
     </div>
   );
-};
+});
 
 export default Canvas; 

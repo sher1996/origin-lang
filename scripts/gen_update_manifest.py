@@ -38,13 +38,14 @@ class UpdateManifestGenerator:
             print(f"Warning: Dist directory not found: {dist_dir}")
             return binaries
         
-        # Look for zip files
-        for zip_file in dist_dir.glob("origin-*-*.zip"):
+        # Look for zip files recursively
+        for zip_file in dist_dir.rglob("origin-*-*.zip"):
             # Parse filename: origin-{platform}-{version}.zip
             parts = zip_file.stem.split("-")
             if len(parts) >= 3:
                 platform = parts[1]  # win, mac, linux
                 binaries[platform] = zip_file
+                print(f"Found binary: {zip_file}")
         
         return binaries
     

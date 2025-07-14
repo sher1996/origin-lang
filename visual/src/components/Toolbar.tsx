@@ -1,18 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { BlockInstance } from '../blocks/definitions';
 import { codeToBlocks, blocksToCode } from '../lib/transform';
 import { verticalLayoutBlocks } from '../lib/autoLayout';
 import { ProjectExporter, type ProjectData } from '../lib/project';
 import type { Connection } from '../hooks/useConnections';
+import { Image } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { downloadBlob } from '../utils/downloadBlob';
 
 interface ToolbarProps {
   blocks: BlockInstance[];
   setBlocks: (blocks: BlockInstance[]) => void;
   connections: Connection[];
   setConnections: (connections: Connection[]) => void;
+  canvasRef: React.RefObject<HTMLDivElement>;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ blocks, setBlocks, connections, setConnections }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ blocks, setBlocks, connections, setConnections, canvasRef }) => {
+  const [toast, setToast] = useState<string | null>(null);
+
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -100,6 +106,44 @@ const Toolbar: React.FC<ToolbarProps> = ({ blocks, setBlocks, connections, setCo
       });
   };
 
+  const handleExportPNG = async () => {
+    if (!canvasRef.current) return;
+    // Detect theme
+    const isDark = document.documentElement.classList.contains('dark');
+    const backgroundColor = isDark ? '#18181b' : '#fff';
+    // Render canvas
+    const canvas = await html2canvas(canvasRef.current, {
+      backgroundColor,
+      scale: 2,
+      useCORS: true,
+    });
+    // Warn if too large
+    if (canvas.width > 8000 || canvas.height > 8000) {
+      setToast('Diagram is too large to export (> 8k x 8k px).');
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      downloadBlob(blob);
+      // Clipboard support
+      if (window.navigator.clipboard && window.ClipboardItem) {
+        try {
+          await window.navigator.clipboard.write([
+            new window.ClipboardItem({ 'image/png': blob })
+          ]);
+          setToast('PNG exported! Copied to clipboard.');
+        } catch {
+          setToast('PNG exported! (Clipboard copy failed)');
+        }
+      } else {
+        // Mobile Safari fallback: only download, no clipboard
+        setToast('PNG exported!');
+      }
+      setTimeout(() => setToast(null), 4000);
+    }, 'image/png');
+  };
+
   return (
     <div className="bg-white border-b border-gray-300 p-4 flex gap-4">
       <div className="flex gap-2">
@@ -145,11 +189,24 @@ const Toolbar: React.FC<ToolbarProps> = ({ blocks, setBlocks, connections, setCo
             className="hidden"
           />
         </label>
+        <button
+          onClick={handleExportPNG}
+          className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors"
+          title="Export diagram as PNG"
+        >
+          <Image size={18} />
+          Export PNG
+        </button>
       </div>
       
       <div className="text-sm text-gray-600 flex items-center">
         {blocks.length} block{blocks.length !== 1 ? 's' : ''} on canvas
       </div>
+      {toast && (
+        <div className="fixed top-4 right-4 bg-black text-white px-4 py-2 rounded shadow-lg z-50 animate-fade-in">
+          {toast}
+        </div>
+      )}
     </div>
   );
 };

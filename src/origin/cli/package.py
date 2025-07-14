@@ -63,7 +63,7 @@ class PackageBuilder:
         print("Installing build dependencies...")
         subprocess.run([
             sys.executable, "-m", "pip", "install", 
-            "pyinstaller>=5.0", "requests>=2.32.0"
+            "pyinstaller>=5.0", "requests>=2.32.0", "pillow>=10.0.0"
         ], check=True)
     
     def build_executable(self, platform_name: str, output_dir: Path) -> Path:
@@ -80,7 +80,6 @@ class PackageBuilder:
         
         cmd = [
             sys.executable, "-m", "PyInstaller",
-            "--onefile",
             "--distpath", str(output_dir),
             "--workpath", str(self.build_dir),
             str(spec_file)
@@ -175,11 +174,11 @@ class PackageBuilder:
         print("Running smoke test...")
         
         try:
-            # Test --version
-            result = subprocess.run([str(exe_path), "--version"], 
+            # Test --help
+            result = subprocess.run([str(exe_path), "--help"], 
                                   capture_output=True, text=True, timeout=30)
             if result.returncode != 0:
-                print(f"Smoke test failed: --version returned {result.returncode}")
+                print(f"Smoke test failed: --help returned {result.returncode}")
                 print(f"stdout: {result.stdout}")
                 print(f"stderr: {result.stderr}")
                 return False

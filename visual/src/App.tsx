@@ -9,7 +9,7 @@ import { useConnections } from './hooks/useConnections';
 import { useDebounce } from './hooks/useDebounce';
 import { useAutosave } from './hooks/useAutosave';
 import { blocksToCodeWithErrorHandling } from './lib/transform';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { BlockInstance } from './blocks/definitions';
 import type { Connection } from './hooks/useConnections';
 
@@ -30,6 +30,7 @@ function App() {
   const [error, setError] = useState<string>('');
   const [isError, setIsError] = useState(false);
   const [showErrorOverlay, setShowErrorOverlay] = useState(false);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
 
   // Auto-save functionality
   const handleRestoreSession = (data: { blocks: BlockInstance[]; connections: Connection[] }) => {
@@ -69,6 +70,7 @@ function App() {
           setBlocks={setBlocks} 
           connections={connections}
           setConnections={setConnections}
+          canvasRef={canvasRef}
         />
         <div className="flex flex-1">
           <Palette />
@@ -76,6 +78,7 @@ function App() {
             blocks={blocks} 
             connections={connections}
             draggingConnection={draggingConnection}
+            ref={canvasRef}
           />
           <div className="w-1/3 border-l border-gray-300">
             <PreviewPane 

@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 # Get the project root directory
-project_root = Path(__file__).parent.parent
+project_root = Path(os.getcwd())
 src_dir = project_root / "src"
 std_dir = project_root / "std"
 
