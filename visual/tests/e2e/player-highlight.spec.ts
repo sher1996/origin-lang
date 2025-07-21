@@ -18,8 +18,10 @@ test.describe('Player Highlight E2E', () => {
     const recordingPath = join(process.cwd(), '..', '..', 'examples', 'recordings', 'fizzbuzz.orirec');
     
     // Check if the recording file exists and upload it
+    console.log('Looking for recording file at:', recordingPath);
     try {
       const recordingContent = readFileSync(recordingPath, 'utf-8');
+      console.log('Recording file found, size:', recordingContent.length);
       await fileInput.setInputFiles({
         name: 'fizzbuzz.orirec',
         mimeType: 'application/octet-stream',
@@ -27,6 +29,7 @@ test.describe('Player Highlight E2E', () => {
       });
     } catch (error) {
       console.warn('Recording file not found, using fallback test data');
+      console.warn('Error:', (error as Error).message);
       // Fallback: create a minimal recording file for testing
       const fallbackRecording = JSON.stringify([
         {
