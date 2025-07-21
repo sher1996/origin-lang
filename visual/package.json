@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "setup:e2e": "node scripts/setup-e2e.js"
+    "setup:e2e": "node scripts/setup-e2e.js",
+    "ci:setup": "node scripts/ci-setup.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

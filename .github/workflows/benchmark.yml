@@ -45,7 +45,7 @@ jobs:
     - name: Run performance tests
       run: |
         echo "Running performance regression tests..."
-        python -m pytest src/origin/tests/test_perf.py -v
+        python -m pytest tests/test_perf.py -v
     
     - name: Comment benchmark results
       if: steps.benchmark.outputs.has_results == 'true' && github.event_name == 'pull_request'

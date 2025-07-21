@@ -31,11 +31,17 @@ jobs:
           python -m pytest tests/test_lockfile.py::TestLockfile::test_new_lockfile -v
           python -m pytest tests/test_lockfile.py::TestLockfile::test_add_package -v
           
+      - name: Setup CI environment
+        run: |
+          echo "Setting up CI environment..."
+          cd visual
+          npm run ci:setup
+          echo "✅ CI environment setup complete"
+          
       - name: Test visual editor build
         run: |
           echo "Testing visual editor build with Export PNG feature..."
           cd visual
-          npm ci
           npm run build
           echo "✅ Visual editor builds successfully with Export PNG feature"
           
@@ -46,11 +52,6 @@ jobs:
           node -e "console.log('html2canvas version:', require('html2canvas/package.json').version)"
           node -e "console.log('lucide-react available:', !!require('lucide-react'))"
           echo "✅ Export PNG dependencies are properly installed"
-          
-      - name: Install Playwright browsers
-        run: |
-          cd visual
-          npx playwright install --with-deps
           
       - name: Run e2e tests
         run: |
