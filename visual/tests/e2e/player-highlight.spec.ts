@@ -15,9 +15,9 @@ test.describe('Player Highlight E2E', () => {
     
     // Create a file input and upload the sample recording
     const fileInput = await page.locator('input[type="file"]');
-    const recordingPath = join(process.cwd(), '..', 'examples', 'recordings', 'fizzbuzz.orirec');
+    const recordingPath = join(process.cwd(), '..', '..', 'examples', 'recordings', 'fizzbuzz.orirec');
     
-    // Check if the recording file exists
+    // Check if the recording file exists and upload it
     try {
       const recordingContent = readFileSync(recordingPath, 'utf-8');
       await fileInput.setInputFiles({
@@ -30,22 +30,25 @@ test.describe('Player Highlight E2E', () => {
       // Fallback: create a minimal recording file for testing
       const fallbackRecording = JSON.stringify([
         {
-          frame: 0,
-          time: 0,
+          version: '1.0',
+          ts: 0,
           blockId: 'SayNode:start',
-          locals: { i: 1 }
+          locals: { i: 1 },
+          globals: {}
         },
         {
-          frame: 1,
-          time: 0.1,
+          version: '1.0',
+          ts: 100,
           blockId: 'LetNode:j',
-          locals: { i: 1, j: 2 }
+          locals: { i: 1, j: 2 },
+          globals: {}
         },
         {
-          frame: 2,
-          time: 0.2,
+          version: '1.0',
+          ts: 200,
           blockId: 'SayNode:output',
-          locals: { i: 1, j: 2, result: 'Hello' }
+          locals: { i: 1, j: 2, result: 'Hello' },
+          globals: {}
         }
       ]);
       
