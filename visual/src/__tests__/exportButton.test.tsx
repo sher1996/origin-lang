@@ -5,7 +5,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type html2canvasType from 'html2canvas';
 
 vi.mock('html2canvas', async () => {
-  const _actual: typeof html2canvasType = await vi.importActual('html2canvas');
+  await vi.importActual('html2canvas');
   return {
     __esModule: true,
     default: async (_node: HTMLElement, _opts: any) => {

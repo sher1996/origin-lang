@@ -17,26 +17,16 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
   blocks, 
   draggingConnection 
 }) => {
-  const _getBlockPosition = (blockId: string) => {
-    const block = blocks.find(b => b.id === blockId);
-    return block?.position || { x: 0, y: 0 };
-  };
-
   const getConnectionPath = (
     fromPos: { x: number; y: number },
     toPos: { x: number; y: number }
   ) => {
     const dx = toPos.x - fromPos.x;
-    const _dy = toPos.y - fromPos.y;
     
     // Create a curved path using quadratic bezier
     const controlPoint1 = {
       x: fromPos.x + dx * 0.5,
       y: fromPos.y
-    };
-    const _controlPoint2 = {
-      x: toPos.x - dx * 0.5,
-      y: toPos.y
     };
     
     return `M ${fromPos.x} ${fromPos.y} Q ${controlPoint1.x} ${controlPoint1.y} ${toPos.x} ${toPos.y}`;
