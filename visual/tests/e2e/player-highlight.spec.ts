@@ -14,14 +14,12 @@ test.describe('Player Highlight E2E', () => {
     await page.click('[data-testid="open-recording-btn"]');
     
     // Create a file input and upload the sample recording
-    const fileInput = await page.locator('input[type="file"]');
+    const fileInput = await page.locator('input[type="file"][accept=".orirec"]');
     const recordingPath = join(process.cwd(), '..', '..', 'examples', 'recordings', 'fizzbuzz.orirec');
     
     // Check if the recording file exists and upload it
-    console.log('Looking for recording file at:', recordingPath);
     try {
       const recordingContent = readFileSync(recordingPath, 'utf-8');
-      console.log('Recording file found, size:', recordingContent.length);
       await fileInput.setInputFiles({
         name: 'fizzbuzz.orirec',
         mimeType: 'application/octet-stream',
@@ -29,7 +27,6 @@ test.describe('Player Highlight E2E', () => {
       });
     } catch (error) {
       console.warn('Recording file not found, using fallback test data');
-      console.warn('Error:', (error as Error).message);
       // Fallback: create a minimal recording file for testing
       const fallbackRecording = JSON.stringify([
         {
@@ -62,8 +59,9 @@ test.describe('Player Highlight E2E', () => {
       });
     }
     
-    // Wait for the recording to load
-    await page.waitForSelector('[data-testid="timeline-bar"]', { timeout: 10000 });
+    // Wait for the recording to load and process
+    await page.waitForTimeout(1000); // Give time for file processing
+    await page.waitForSelector('[data-testid="timeline-bar"]', { timeout: 15000 });
     
     // Find the timeline slider and seek to 0.8 (80%)
     const timelineSlider = page.locator('[data-testid="timeline-slider"]');
@@ -95,25 +93,59 @@ test.describe('Player Highlight E2E', () => {
     // Wait for the app to load
     await page.waitForSelector('[data-testid="toolbar"]', { timeout: 10000 });
     
-    // Mock the recording data directly in the browser
-    await page.evaluate(() => {
-      const mockRecording = [
-        { frame: 0, time: 0, blockId: 'SayNode:start', locals: { i: 1 } },
-        { frame: 1, time: 0.1, blockId: 'LetNode:j', locals: { i: 1, j: 2 } },
-        { frame: 2, time: 0.2, blockId: 'SayNode:output', locals: { i: 1, j: 2, result: 'Hello' } },
-        { frame: 3, time: 0.3, blockId: 'RepeatNode:loop', locals: { i: 1, j: 2, result: 'Hello' } },
-        { frame: 4, time: 0.4, blockId: 'SayNode:final', locals: { i: 1, j: 2, result: 'Hello', count: 3 } }
-      ];
-      
-      // Set the recording in the app state
-      (globalThis as any).testRecording = mockRecording;
-    });
-    
-    // Trigger the recording load
+    // Click the "Open Recording" button
     await page.click('[data-testid="open-recording-btn"]');
     
-    // Wait for the timeline to appear
-    await page.waitForSelector('[data-testid="timeline-bar"]', { timeout: 10000 });
+    // Create a file input and upload a test recording
+    const fileInput = await page.locator('input[type="file"][accept=".orirec"]');
+    
+    // Create a test recording file
+    const testRecording = JSON.stringify([
+      {
+        version: '1.0',
+        ts: 0,
+        blockId: 'SayNode:start',
+        locals: { i: 1 },
+        globals: {}
+      },
+      {
+        version: '1.0',
+        ts: 100,
+        blockId: 'LetNode:j',
+        locals: { i: 1, j: 2 },
+        globals: {}
+      },
+      {
+        version: '1.0',
+        ts: 200,
+        blockId: 'SayNode:output',
+        locals: { i: 1, j: 2, result: 'Hello' },
+        globals: {}
+      },
+      {
+        version: '1.0',
+        ts: 300,
+        blockId: 'RepeatNode:loop',
+        locals: { i: 1, j: 2, result: 'Hello' },
+        globals: {}
+      },
+      {
+        version: '1.0',
+        ts: 400,
+        blockId: 'SayNode:final',
+        locals: { i: 1, j: 2, result: 'Hello', count: 3 },
+        globals: {}
+      }
+    ]);
+    
+    await fileInput.setInputFiles({
+      name: 'test.orirec',
+      mimeType: 'application/octet-stream',
+      buffer: Buffer.from(testRecording)
+    });
+    
+    // Wait for the timeline to appear with longer timeout
+    await page.waitForSelector('[data-testid="timeline-bar"]', { timeout: 15000 });
     
     // Seek to 0.8 (should be around frame 3-4)
     const timelineSlider = page.locator('[data-testid="timeline-slider"]');
