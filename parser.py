@@ -253,5 +253,5 @@ class Parser:
                 self.advance()
         return stmts
 
-def parse(tokens: List[Any]):
+def parse(tokens: List[Any]) -> List[Any]:
     return Parser(tokens).parse() 

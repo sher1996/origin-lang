@@ -212,14 +212,7 @@ class FuncDefNode(ASTNode):
         # Function definitions are handled specially by the evaluator
         return None
 
-@dataclass
-class FuncCallNode(ASTNode):
-    """Represents a function call statement."""
-    name: str
-    args: List[ASTNode]
-    
-    def accept(self, visitor: ASTVisitor) -> Any:
-        return visitor.visit_function_call(FunctionCallNode(self.name, self.args))
+# FuncCallNode removed - use FunctionCallNode instead
 
 @dataclass
 class ExprStmtNode(ASTNode):

@@ -1,0 +1,10 @@
+let i = 1
+repeat 3:
+    let result = ""
+    say "check"
+    if i % 3 == 0:
+        let result = "Fizz"
+    else:
+        let result = i
+    say result
+    let i = i + 1 

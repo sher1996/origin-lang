@@ -46,16 +46,18 @@ class TestRecorder(unittest.TestCase):
         
         # Parse first line
         event1 = json.loads(lines[0])
-        self.assertEqual(event1["id"], "LetNode:x")
-        self.assertEqual(event1["env"]["variables"]["x"], 10)
-        self.assertEqual(event1["event_num"], 0)
+        self.assertEqual(event1["version"], "v2")
+        self.assertEqual(event1["blockId"], "LetNode:x")
+        self.assertEqual(event1["locals"]["x"], 10)
+        self.assertIn("ts", event1)
         
         # Parse second line
         event2 = json.loads(lines[1])
-        self.assertEqual(event2["id"], "SayNode:hello")
-        self.assertEqual(event2["env"]["variables"]["x"], 10)
-        self.assertEqual(event2["env"]["variables"]["y"], 20)
-        self.assertEqual(event2["event_num"], 1)
+        self.assertEqual(event2["version"], "v2")
+        self.assertEqual(event2["blockId"], "SayNode:hello")
+        self.assertEqual(event2["locals"]["x"], 10)
+        self.assertEqual(event2["locals"]["y"], 20)
+        self.assertIn("ts", event2)
     
     def test_safe_snapshot_truncates_large_values(self):
         """Test that snapshot helper truncates large values."""
@@ -94,11 +96,11 @@ class TestRecorder(unittest.TestCase):
         self.assertGreaterEqual(len(events), 2)
         
         # Check that variables are tracked
-        let_event = next(e for e in events if "LetNode" in e["id"])
-        say_event = next(e for e in events if "SayNode" in e["id"])
+        let_event = next(e for e in events if "LetNode" in e["blockId"])
+        say_event = next(e for e in events if "SayNode" in e["blockId"])
         
-        self.assertIn("variables", let_event["env"])
-        self.assertIn("variables", say_event["env"])
+        self.assertIn("locals", let_event)
+        self.assertIn("locals", say_event)
     
     def test_recorder_with_simple_script(self):
         """Test recorder with a simple script that has known behavior."""
@@ -121,20 +123,20 @@ class TestRecorder(unittest.TestCase):
         
         events = [json.loads(line) for line in lines]
         
-        # Should have 3 events: 2 LetNode + 1 SayNode
-        self.assertEqual(len(events), 3)
+        # Should have 5 events: 2 LetNode + 2 NumberNode (for expressions) + 1 SayNode
+        self.assertEqual(len(events), 5)
         
         # Check variable progression
-        let_events = [e for e in events if "LetNode" in e["id"]]
-        say_events = [e for e in events if "SayNode" in e["id"]]
+        let_events = [e for e in events if "LetNode" in e["blockId"]]
+        say_events = [e for e in events if "SayNode" in e["blockId"]]
         
         self.assertEqual(len(let_events), 2)
         self.assertEqual(len(say_events), 1)
         
         # Check that variables are properly tracked
         final_event = events[-1]
-        self.assertIn("variables", final_event["env"])
-        variables = final_event["env"]["variables"]
+        self.assertIn("locals", final_event)
+        variables = final_event["locals"]
         self.assertEqual(variables["a"], 1)
         self.assertEqual(variables["b"], 2)
 

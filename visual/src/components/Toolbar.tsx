@@ -13,10 +13,12 @@ interface ToolbarProps {
   setBlocks: (blocks: BlockInstance[]) => void;
   connections: Connection[];
   setConnections: (connections: Connection[]) => void;
-  canvasRef: React.RefObject<HTMLDivElement>;
+  canvasRef: React.RefObject<HTMLDivElement | null>;
+  onOpenRecording?: (recording: any[]) => void;
+  isReplayMode?: boolean;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ blocks, setBlocks, connections, setConnections, canvasRef }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ blocks, setBlocks, connections, setConnections, canvasRef, onOpenRecording, isReplayMode = false }) => {
   const [toast, setToast] = useState<string | null>(null);
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,6 +108,33 @@ const Toolbar: React.FC<ToolbarProps> = ({ blocks, setBlocks, connections, setCo
       });
   };
 
+  const handleOpenRecording = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      try {
+        const lines = content.trim().split('\n');
+        const recording = lines.map(line => JSON.parse(line));
+        
+        // Validate recording format
+        if (!recording.length || !recording[0].version || recording[0].version !== 'v2') {
+          throw new Error('Invalid recording format. Expected v2 format.');
+        }
+        
+        onOpenRecording?.(recording);
+        setToast('Recording loaded successfully!');
+        setTimeout(() => setToast(null), 3000);
+      } catch (error) {
+        console.error('Error loading recording:', error);
+        alert('Error loading recording. Please check the file format.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const handleExportPNG = async () => {
     if (!canvasRef.current) return;
     // Detect theme
@@ -145,47 +174,60 @@ const Toolbar: React.FC<ToolbarProps> = ({ blocks, setBlocks, connections, setCo
   };
 
   return (
-    <div className="bg-white border-b border-gray-300 p-4 flex gap-4">
+    <div className="bg-white border-b border-gray-300 p-4 flex gap-4" data-testid="toolbar">
       <div className="flex gap-2">
-        <label className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded cursor-pointer transition-colors">
+        <label className={`${isReplayMode ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 cursor-pointer'} text-white px-4 py-2 rounded transition-colors`}>
           Import File
           <input
             type="file"
             accept=".origin"
             onChange={handleImport}
             className="hidden"
+            disabled={isReplayMode}
           />
         </label>
         
         <button
           onClick={handlePaste}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors"
+          disabled={isReplayMode}
+          className={`${isReplayMode ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'} text-white px-4 py-2 rounded transition-colors`}
         >
           Paste Code
         </button>
         
         <button
           onClick={handleExport}
-          disabled={blocks.length === 0}
-          className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white px-4 py-2 rounded transition-colors"
+          disabled={blocks.length === 0 || isReplayMode}
+          className={`${isReplayMode ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-500 hover:bg-purple-600'} disabled:bg-gray-400 text-white px-4 py-2 rounded transition-colors`}
         >
           Export Code
         </button>
         
         <button
           onClick={handleSaveProject}
-          disabled={blocks.length === 0}
-          className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white px-4 py-2 rounded transition-colors"
+          disabled={blocks.length === 0 || isReplayMode}
+          className={`${isReplayMode ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'} disabled:bg-gray-400 text-white px-4 py-2 rounded transition-colors`}
         >
           Save Project
         </button>
         
-        <label className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded cursor-pointer transition-colors">
+        <label className={`${isReplayMode ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-500 hover:bg-indigo-600 cursor-pointer'} text-white px-4 py-2 rounded transition-colors`}>
           Open Project
           <input
             type="file"
             accept=".originproj"
             onChange={handleOpenProject}
+            className="hidden"
+            disabled={isReplayMode}
+          />
+        </label>
+        
+        <label className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded cursor-pointer transition-colors" data-testid="open-recording-btn">
+          Open Recording
+          <input
+            type="file"
+            accept=".orirec"
+            onChange={handleOpenRecording}
             className="hidden"
           />
         </label>
