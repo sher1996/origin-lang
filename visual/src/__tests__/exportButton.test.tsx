@@ -1,15 +1,14 @@
 import { render, fireEvent, screen } from '@testing-library/react';
 import Toolbar from '../components/Toolbar';
-import React from 'react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi } from 'vitest';
 import type html2canvasType from 'html2canvas';
 
 vi.mock('html2canvas', async () => {
-  const actual: typeof html2canvasType = await vi.importActual('html2canvas');
+  const _actual: typeof html2canvasType = await vi.importActual('html2canvas');
   return {
     __esModule: true,
-    default: async (node: HTMLElement, opts: any) => {
+    default: async (_node: HTMLElement, _opts: any) => {
       return {
         width: 400,
         height: 300,

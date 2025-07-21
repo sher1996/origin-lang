@@ -1,11 +1,11 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { describe, test, expect, vi } from 'vitest';
 import App from '../App';
 
 // Mock the transform functions
-jest.mock('../lib/transform', () => ({
-  codeToBlocks: jest.fn((code: string) => {
+vi.mock('../lib/transform', () => ({
+  codeToBlocks: vi.fn((code: string) => {
     if (code.includes('say')) {
       return [{
         id: 'say-1',
@@ -17,14 +17,14 @@ jest.mock('../lib/transform', () => ({
     }
     return [];
   }),
-  blocksToCode: jest.fn((blocks: any[]) => {
+  blocksToCode: vi.fn((blocks: any[]) => {
     return blocks.map(block => `say ${block.inputs.expr}`).join('\n');
   })
 }));
 
 // Mock the autoLayout function
-jest.mock('../lib/autoLayout', () => ({
-  verticalLayoutBlocks: jest.fn((blocks: any[]) => blocks)
+vi.mock('../lib/autoLayout', () => ({
+  verticalLayoutBlocks: vi.fn((blocks: any[]) => blocks)
 }));
 
 describe('Import Functionality', () => {

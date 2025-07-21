@@ -453,7 +453,7 @@ export function usePlayer(recording: RecordingFrame[] | null): [PlayerState, Pla
     setSpeed: updateSpeed,
     jumpToStart,
     jumpToEnd,
-    loadFrameWindow: (centerFrame: number) => {}
+    loadFrameWindow: (_centerFrame: number) => {}
   };
 
   return [state, controls];

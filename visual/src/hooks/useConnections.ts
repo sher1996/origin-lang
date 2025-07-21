@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import type { BlockInstance } from '../blocks/definitions';
 
 export interface Connection {
   id: string;

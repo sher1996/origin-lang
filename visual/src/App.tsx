@@ -18,7 +18,7 @@ import type { BlockInstance } from './blocks/definitions';
 import type { Connection } from './hooks/useConnections';
 import type { RecordingFrame } from './hooks/usePlayer';
 
-function AppContent({ recording, setRecording }: { 
+function AppContent({ recording: _recording, setRecording }: { 
   recording: RecordingFrame[] | null; 
   setRecording: (recording: RecordingFrame[] | null) => void;
 }) {
@@ -27,12 +27,12 @@ function AppContent({ recording, setRecording }: {
     connections, 
     setConnections,
     draggingConnection, 
-    addConnection, 
-    removeConnection, 
-    startDraggingConnection, 
-    stopDraggingConnection, 
-    updateDraggingPosition, 
-    canConnect 
+    addConnection: _addConnection, 
+    removeConnection: _removeConnection, 
+    startDraggingConnection: _startDraggingConnection, 
+    stopDraggingConnection: _stopDraggingConnection, 
+    updateDraggingPosition: _updateDraggingPosition, 
+    canConnect: _canConnect 
   } = useConnections();
   const [code, setCode] = useState<string>('');
   const [error, setError] = useState<string>('');

@@ -76,7 +76,7 @@ export function useAutosave(
 
   // Set up auto-save interval
   useEffect(() => {
-    intervalRef.current = setInterval(saveToStorage, AUTOSAVE_INTERVAL);
+    intervalRef.current = setInterval(saveToStorage, AUTOSAVE_INTERVAL) as any;
     
     return () => {
       if (intervalRef.current) {

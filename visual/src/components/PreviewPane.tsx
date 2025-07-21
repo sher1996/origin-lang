@@ -8,7 +8,7 @@ interface PreviewPaneProps {
 
 const PreviewPane: React.FC<PreviewPaneProps> = ({ code, isError, errorMessage }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [output, setOutput] = useState<string>('');
+  const [_output, setOutput] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {

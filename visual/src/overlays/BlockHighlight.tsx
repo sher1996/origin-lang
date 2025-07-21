@@ -20,7 +20,7 @@ const BlockHighlight: React.FC<BlockHighlightProps> = ({ blocks, currentFrame, i
 
   if (!activeBlock) return null;
 
-  const { position, inputs } = activeBlock;
+  const { position, inputs: _inputs } = activeBlock;
   
   // Format local variables for display
   const formatVariables = (locals: Record<string, any>) => {
