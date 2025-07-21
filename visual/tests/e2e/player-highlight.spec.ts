@@ -103,7 +103,7 @@ test.describe('Player Highlight E2E', () => {
       ];
       
       // Set the recording in the app state
-      (window as any).testRecording = mockRecording;
+      (globalThis as any).testRecording = mockRecording;
     });
     
     // Trigger the recording load
