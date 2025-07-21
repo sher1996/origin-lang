@@ -2,7 +2,6 @@ import { render, fireEvent, screen } from '@testing-library/react';
 import Toolbar from '../components/Toolbar';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi } from 'vitest';
-import type html2canvasType from 'html2canvas';
 
 vi.mock('html2canvas', async () => {
   await vi.importActual('html2canvas');
