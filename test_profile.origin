@@ -1,0 +1,7 @@
+let x = 0
+let y = 10
+repeat 1000 times:
+    let x = x + 1
+    let y = y - 1
+say x
+say y 

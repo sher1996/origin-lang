@@ -41,10 +41,18 @@ class Replayer:
             if not isinstance(event, dict):
                 raise ValueError(f"Event {i} is not a dictionary")
             
-            required_fields = ['id', 'ts', 'env', 'event_num']
-            missing_fields = [field for field in required_fields if field not in event]
-            if missing_fields:
-                raise ValueError(f"Event {i} missing required fields: {missing_fields}")
+            # Check for v2 format
+            if "version" in event and event["version"] == "v2":
+                required_fields = ['version', 'ts', 'blockId', 'locals', 'globals']
+                missing_fields = [field for field in required_fields if field not in event]
+                if missing_fields:
+                    raise ValueError(f"Event {i} missing required v2 fields: {missing_fields}")
+            else:
+                # Fallback to old format for backward compatibility
+                required_fields = ['id', 'ts', 'env', 'event_num']
+                missing_fields = [field for field in required_fields if field not in event]
+                if missing_fields:
+                    raise ValueError(f"Event {i} missing required fields: {missing_fields}")
     
     def next(self) -> Optional[Dict[str, Any]]:
         """Move to next event and return it."""
@@ -70,7 +78,16 @@ class Replayer:
     def current_env(self) -> Optional[Dict[str, Any]]:
         """Get environment of current event."""
         if 0 <= self.current_index < len(self.events):
-            return self.events[self.current_index]['env']
+            event = self.events[self.current_index]
+            # Handle v2 format
+            if "version" in event and event["version"] == "v2":
+                return {
+                    "variables": event.get("locals", {}),
+                    "functions": event.get("globals", {}).get("functions", [])
+                }
+            else:
+                # Fallback to old format
+                return event.get("env", {})
         return None
     
     def current_event(self) -> Optional[Dict[str, Any]]:

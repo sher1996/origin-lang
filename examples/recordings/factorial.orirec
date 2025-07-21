@@ -1,0 +1,17 @@
+{"version": "v2", "ts": 0.0, "blockId": "LetNode:n", "locals": {"n": 5}, "globals": {}}
+{"version": "v2", "ts": 0.1, "blockId": "LetNode:result", "locals": {"n": 5, "result": 1}, "globals": {}}
+{"version": "v2", "ts": 0.2, "blockId": "RepeatNode:loop", "locals": {"n": 5, "result": 1}, "globals": {}}
+{"version": "v2", "ts": 0.3, "blockId": "LetNode:result", "locals": {"n": 5, "result": 5}, "globals": {}}
+{"version": "v2", "ts": 0.4, "blockId": "LetNode:n", "locals": {"n": 4, "result": 5}, "globals": {}}
+{"version": "v2", "ts": 0.5, "blockId": "RepeatNode:loop", "locals": {"n": 4, "result": 5}, "globals": {}}
+{"version": "v2", "ts": 0.6, "blockId": "LetNode:result", "locals": {"n": 4, "result": 20}, "globals": {}}
+{"version": "v2", "ts": 0.7, "blockId": "LetNode:n", "locals": {"n": 3, "result": 20}, "globals": {}}
+{"version": "v2", "ts": 0.8, "blockId": "RepeatNode:loop", "locals": {"n": 3, "result": 20}, "globals": {}}
+{"version": "v2", "ts": 0.9, "blockId": "LetNode:result", "locals": {"n": 3, "result": 60}, "globals": {}}
+{"version": "v2", "ts": 1.0, "blockId": "LetNode:n", "locals": {"n": 2, "result": 60}, "globals": {}}
+{"version": "v2", "ts": 1.1, "blockId": "RepeatNode:loop", "locals": {"n": 2, "result": 60}, "globals": {}}
+{"version": "v2", "ts": 1.2, "blockId": "LetNode:result", "locals": {"n": 2, "result": 120}, "globals": {}}
+{"version": "v2", "ts": 1.3, "blockId": "LetNode:n", "locals": {"n": 1, "result": 120}, "globals": {}}
+{"version": "v2", "ts": 1.4, "blockId": "RepeatNode:loop", "locals": {"n": 1, "result": 120}, "globals": {}}
+{"version": "v2", "ts": 1.5, "blockId": "LetNode:result", "locals": {"n": 1, "result": 120}, "globals": {}}
+{"version": "v2", "ts": 1.6, "blockId": "SayNode:output", "locals": {"n": 1, "result": 120}, "globals": {}} 

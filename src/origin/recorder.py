@@ -17,12 +17,17 @@ class Recorder:
         """Record an execution event with node ID and environment snapshot."""
         from .snapshot import safe_snapshot
         
-        snapshot = safe_snapshot(env)
+        # Extract variables and functions from the environment
+        variables = env.get("variables", {})
+        functions = env.get("functions", [])
+        
+        # Create v2 format event
         event = {
-            "id": node_id,
+            "version": "v2",
             "ts": time.time(),
-            "env": snapshot,
-            "event_num": self.event_count
+            "blockId": node_id,
+            "locals": safe_snapshot(variables),
+            "globals": safe_snapshot({"functions": functions})
         }
         
         self.fp.write(json.dumps(event) + "\n")

@@ -5,7 +5,8 @@ from parser import SayNode, LetNode, RepeatNode, FuncDefNode, FuncCallNode, Expr
 import lexer
 import parser
 from .recorder import Recorder
-from .runtime.eval import EvaluatorVisitor, OriginError
+from .runtime.eval import EvaluatorVisitor
+from .errors import OriginError
 
 class _JSONVisitor:
     from .builtins.json import parse as json_parse
@@ -26,6 +27,7 @@ class Evaluator:
         self.recorder = recorder
         self.global_loaded_modules = set()
         self.use_eval_fallback = os.environ.get('ORIGIN_EVAL_FALLBACK') == '1'
+        self.visitor = None  # Store visitor for profiling
         if self.use_eval_fallback:
             print("Warning: Using eval() fallback mode (deprecated)")
     
@@ -123,17 +125,39 @@ class Evaluator:
             expr = self._replace_plus_outside_strings(expr)
             return eval(expr, allowed_names)
         else:
-            # Use the new visitor-based evaluator
-            # For now, we'll need to parse the expression string into AST nodes
-            # This is a simplified approach - in a full implementation, we'd need a proper expression parser
+            # Use the new visitor-based evaluator for simple expressions
+            # For complex expressions, fall back to eval until we have a proper expression parser
             try:
-                # Create a simple visitor for the current expression evaluation
-                visitor = EvaluatorVisitor(variables, functions, self.recorder, self.net_allowed)
-                visitor.base_path = self.base_path
-                visitor.files_allowed = self.files_allowed
+                # Try to parse simple expressions as AST nodes
+                if isinstance(expr, str):
+                    # Simple literal parsing
+                    expr = expr.strip()
+                    if expr.isdigit():
+                        from src.origin.parser.ast_nodes import NumberNode
+                        node = NumberNode(int(expr))
+                        visitor = EvaluatorVisitor(variables, functions, self.recorder, self.net_allowed)
+                        visitor.base_path = self.base_path
+                        visitor.files_allowed = self.files_allowed
+                        self.visitor = visitor  # Store for profiling
+                        return node.accept(visitor)
+                    elif expr.startswith('"') and expr.endswith('"'):
+                        from src.origin.parser.ast_nodes import StringNode
+                        node = StringNode(expr[1:-1])
+                        visitor = EvaluatorVisitor(variables, functions, self.recorder, self.net_allowed)
+                        visitor.base_path = self.base_path
+                        visitor.files_allowed = self.files_allowed
+                        self.visitor = visitor  # Store for profiling
+                        return node.accept(visitor)
+                    elif expr in variables:
+                        from src.origin.parser.ast_nodes import VariableNode
+                        node = VariableNode(expr)
+                        visitor = EvaluatorVisitor(variables, functions, self.recorder, self.net_allowed)
+                        visitor.base_path = self.base_path
+                        visitor.files_allowed = self.files_allowed
+                        self.visitor = visitor  # Store for profiling
+                        return node.accept(visitor)
                 
-                # For now, fall back to eval for complex expressions
-                # TODO: Implement proper expression parsing to AST nodes
+                # Fall back to eval for complex expressions
                 allowed_names = {**variables, "__builtins__": {}}
                 for fname in functions:
                     allowed_names[fname] = self._make_func(fname, functions, variables)
